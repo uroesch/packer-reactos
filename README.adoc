@@ -1,0 +1,56 @@
+= Packer Qemu Builder for ReactOS
+
+This is a an early version of my attempt to build KVM images from ReactOS ISOs.
+
+== Todo 
+* Automatic download of ISO files
+
+== Prerequisites
+* Packer >= 1.7.0 
+* Qemu (Tested with version 5.0.0 but older version should work as well)
+* Ruby
+* Rake
+
+== Howto
+
+=== Download the images
+
+NOTE: Currently only RC and nightly images work the boot CDs for `0.4.13`
+      are bluescreening!
+
+Download the zipped ISO images from the respective websites, unpack them
+to the `iso/reactos` directory.
+
+Further checksum them with `sha256sum` and modify the values in the
+`reactos-<release>.pkrvars.hcl` files.
+
+== Build images 
+
+.Simple build with rake
+[source,bash]
+----
+rake
+----
+
+TIP: With rake the environment variables `PACKER_LOG=1` and 
+     `PACKER_LOG_PATH=logs/reactos-<release>.log` will be set for better
+     debugging.
+
+.Simple build manually 
+[source,bash]
+----
+packer build -var-file="reactos-rc.pkrvars.hcl" -only="*.reactos-rc" reactos.pkr.hcl
+packer build -var-file="reactos-nightly.pkrvars.hcl" -only="*.reactos-nightly" reactos.pkr.hcl
+----
+
+.Override default password, user and organization
+[source,bash]
+----
+packer build \
+  -var="ros_user=Road Runner" \
+  -var="ros_organization=acme.com" \
+  -var="ros_admin_password=Wile-E.-Coyote" \
+  -var-file="reactos-rc.pkrvars.hcl" \
+  -only="*.reactos-rc" \
+  reactos.pkr.hcl
+----

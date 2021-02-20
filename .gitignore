@@ -1,0 +1,7 @@
+.rake_tasks~
+logs
+iso
+packer_cache
+artifacts
+http
+images
