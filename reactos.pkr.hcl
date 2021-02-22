@@ -98,7 +98,6 @@ source "qemu" "reactos" {
     "<leftAltOn>s<leftAltOff><wait3>",         # On nightly -> select the shutdown button
     "<enter><wait3>"                           # On rc -> ok shutdown dialog
   ]
-
   boot_wait        = "3s"
   cdrom_interface  = "ide"
   communicator     = "none"
@@ -120,14 +119,13 @@ source "qemu" "reactos" {
   qemuargs         = [
     ["-m", "${var.memory}M"],
     ["-smp", "${var.cpu}"],
+    # normally the the drives are added by packer itself but using ide for
+    # both cd and disk does not work because the index for the disk is not
+    # specified. The disk is declare before the cd with index=0 and an
+    # error occurs.
     ["-drive", "file=${local.output_directory}/packer-${var.name},if=ide,index=1,cache=none,discard=ignore,format=qcow2"],
     ["-drive", "file=iso/reactos/${var.iso_file},if=ide,index=0,id=cdrom,media=cdrom"]
   ]
-  ssh_password     = "none"
-  ssh_pty          = true
-  ssh_timeout      = "45m"
-  ssh_username     = "none"
-  ssh_wait_timeout = "45m"
 }
 
 # -----------------------------------------------------------------------------
