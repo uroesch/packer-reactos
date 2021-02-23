@@ -7,7 +7,7 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-set -x 
+set -x
 trap cleanup EXIT
 
 # -----------------------------------------------------------------------------
@@ -60,7 +60,7 @@ function parse_options() {
 }
 
 function evaluate_options() {
-  # convert the format to an array for 
+  # convert the format to an array for
   FORMATS+=( ${FORMAT} )
 }
 

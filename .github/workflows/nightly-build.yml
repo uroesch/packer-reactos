@@ -1,0 +1,73 @@
+# -----------------------------------------------------------------------------
+# Run nightly build verification
+# Author: Urs Roesch https://github.com/uroesch
+# Version: 0.1.0
+# -----------------------------------------------------------------------------
+name: nightly-build
+
+on:
+  push:
+    branches:
+    - workflow/*
+  schedule:
+    - cron: '13 4 * * *' # Sync submodules daily
+  workflow_dispatch:
+
+jobs:
+  nightly-build:
+    timeout-minutes: 90
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os:
+        - ubuntu-latest
+
+    steps:
+    - name: Install qemu and vncsnapshot
+      shell: bash
+      run: >
+        sudo apt-get -y update &&
+        sudo apt-get -y install qemu-system-x86 qemu-utils vncsnapshot
+
+    - name: Packer version
+      shell: bash
+      run: packer -version
+
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Run vncsnapshots in background
+      shell: bash
+      run: |2+
+        function vnc_port() {
+          ls -lt packer_cache/port/ | \
+            grep -o "59[0-9][0-9]" | \
+            head -n 1
+        }
+        function take_screenshots() {
+          mkdir -p ../debug/
+          sleep 25
+          vncsnapshot \
+            -count 800  \
+            -fps 10 \
+            localhost:$(vnc_port) \
+            ../debug/reactos.jpg
+        }
+        take_screenshots &
+
+    - name: Build nightly
+      shell: bash
+      run: >
+        rake
+        BUILD=reactos-nightly
+        FAIL_FAST=true
+        PACKER_LOG_PATH=../debug/build.log
+        PKR_VAR_headless=true
+
+    - name: Upload artifacts on failure
+      if: failure()
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        name: debug.zip
+        path: ../debug
