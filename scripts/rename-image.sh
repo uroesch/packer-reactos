@@ -25,7 +25,7 @@ declare -r DEBUG=${DEBUG:-false}
 # -----------------------------------------------------------------------------
 function init() {
   [[ ${DEBUG} == true ]] && set -x
-  [[ ! -d ${IMAGES_DIR} ]] && mkdir -p ${IMAGES_DIR} || : 
+  [[ ! -d ${IMAGES_DIR} ]] && mkdir -p ${IMAGES_DIR} || :
 }
 
 function image_type() {
@@ -49,13 +49,13 @@ function rename_image() {
   local source_type=$(image_type ${source_image})
   local basename=${source_dir##*/}
   local dest_image=${basename}.${source_type}
-  
+
   mv ${source_image} ${IMAGES_DIR}/${dest_image}
-  rmdir ${source_dir} || : 
+  rmdir ${source_dir} || :
 }
 
 # -----------------------------------------------------------------------------
 # Main
 # -----------------------------------------------------------------------------
-init 
+init
 rename_image ${DIST_NAME}

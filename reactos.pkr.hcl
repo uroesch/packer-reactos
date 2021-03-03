@@ -23,7 +23,7 @@ variable "disk_size" {
   type = string
 }
 variable "headless" {
-  type = string
+  type = bool
 }
 variable "http_dir" {
   type = string
@@ -61,19 +61,19 @@ source "qemu" "reactos" {
   accelerator      = "none"
   boot_command     = [
     "<wait10>",                                # wait for setup screen
-    "<enter><wait>",                           # language selection -> United States
-    "<enter><wait>",                           # welcome -> install or upgrade
-    "<enter><wait>",                           # version status -> continue
-    "<enter><wait>",                           # device settings -> accept device settings
-    "<enter><wait>",                           # disk settings -> use unpartitioned space
-    "<enter><wait>",                           # format partition -> FAT (quick format)
-    "<enter><wait>",                           # format partition -> confirmation
-    "<enter><wait>",                           # reactos install directory
-    "<wait60>",                                # installation process
-    "<enter><wait>",                           # install boot loader
-    "<wait10>",                                # reboot countdown
-    "<wait10>",                                # boot menu countdown
-    "<wait90>",                                # wait for graphical dialogs after boot
+    "<enter><wait3>",                          # language selection -> United States
+    "<enter><wait3>",                          # welcome -> install or upgrade
+    "<enter><wait3>",                          # version status -> continue
+    "<enter><wait3>",                          # device settings -> accept device settings
+    "<enter><wait3>",                          # disk settings -> use unpartitioned space
+    "<enter><wait3>",                          # format partition -> FAT (quick format)
+    "<enter><wait3>",                          # format partition -> confirmation
+    "<enter><wait3>",                          # reactos install directory
+    "<wait120>",                               # installation process
+    "<enter><wait3>",                          # install boot loader
+    "<wait15>",                                # reboot countdown
+    "<wait15>",                                # boot menu countdown
+    "<wait120>",                               # wait for graphical dialogs after boot
     "<enter><wait3>",                          # welcome setup wizard -> next
     "<enter><wait3>",                          # acknowledgements -> next
     "<down><wait><enter><wait3>",              # product options -> ReactOS Server (default) -> next
@@ -91,7 +91,7 @@ source "qemu" "reactos" {
     "<tab><enter>",                            # wine gecko installer -> cancel
     "<wait3><enter>",                          # reboot -> finish
     "<wait10>",                                # boot menu countdown
-    "<wait75>",                                # startup wait time
+    "<wait120>",                               # startup wait time
     "<tab><enter><wait3>",                     # driver installation -> install
     "<spacebar><enter><wait3>",                # do not ask again -> cancel
     "<leftAltOn><f4><leftAltOff><wait3>",      # menu flyout
@@ -109,13 +109,16 @@ source "qemu" "reactos" {
   host_port_max    = 2229
   host_port_min    = 2222
   http_directory   = "${var.http_dir}"
-  http_port_max    = 10089
   http_port_min    = 10082
+  http_port_max    = 10089
+  vnc_port_min     = 5901
+  vnc_port_max     = 5999
   iso_checksum     = "${var.iso_checksum}"
   iso_urls         = ["iso/reactos/${var.iso_file}"]
   memory           = "${var.memory}"
   net_device       = "rtl8139"
   output_directory = "${local.output_directory}"
+  shutdown_timeout = "20m"
   qemuargs         = [
     ["-m", "${var.memory}M"],
     ["-smp", "${var.cpu}"],
