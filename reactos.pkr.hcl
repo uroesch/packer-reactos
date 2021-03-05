@@ -8,25 +8,32 @@ variable "version" {
   type = string
 }
 variable "target" {
-  type = string
+  type    = string
+  default = "workstation"
 }
 variable "cpu" {
-  type = string
+  type    = string
+  default = "1"
 }
 variable "memory" {
-  type = string
+  type    = string
+  default = "1024"
 }
 variable "destination_dir" {
-  type = string
+  type    = string
+  default = "artifacts"
 }
 variable "disk_size" {
-  type = string
+  type    = string
+  default = "4000"
 }
 variable "headless" {
-  type = bool
+  type    = bool
+  default = "false"
 }
 variable "http_dir" {
-  type = string
+  type    = string
+  default = "http"
 }
 variable "iso_checksum" {
   type = string
@@ -59,6 +66,7 @@ locals {
 # -----------------------------------------------------------------------------
 source "qemu" "reactos" {
   accelerator      = "none"
+  /*
   boot_command     = [
     "<wait10>",                                # wait for setup screen
     "<enter><wait3>",                          # language selection -> United States
@@ -98,6 +106,7 @@ source "qemu" "reactos" {
     "<leftAltOn>s<leftAltOff><wait3>",         # On nightly -> select the shutdown button
     "<enter><wait3>"                           # On rc -> ok shutdown dialog
   ]
+  */
   boot_wait        = "3s"
   cdrom_interface  = "ide"
   communicator     = "none"
@@ -142,6 +151,11 @@ build {
   source "source.qemu.reactos" {
     name = "reactos-nightly"
   }
+  /*
+  source "source.qemu.reactos" {
+    name = "reactos-release"
+  }
+  */
   post-processor "shell-local" {
     script           = "scripts/rename-image.sh"
     environment_vars = [

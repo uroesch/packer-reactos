@@ -1,12 +1,7 @@
+# Common Variables
 name            = "reactos"
 version         = "nightly"
 target          = "workstation"
-cpu             = "1"
-memory          = "1024"
-destination_dir = "artifacts"
-disk_size       = "4000"
-headless        = "false"
-http_dir        = "http"
 iso_checksum    = "sha256:b52c508fd2193dc1a19843199c62f61318893f8b53d306055f5aff83be768065"
 iso_file        = "reactos-bootcd-0.4.15-dev-2069-gfd8080b-x86-gcc-lin-dbg.iso"
 
