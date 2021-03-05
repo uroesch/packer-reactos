@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # Run nightly build verification
 # Author: Urs Roesch https://github.com/uroesch
-# Version: 0.1.0
+# Version: 0.2.0
 # -----------------------------------------------------------------------------
 name: nightly-build
 
@@ -24,11 +24,11 @@ jobs:
         - ubuntu-latest
 
     steps:
-    - name: Install qemu and vncsnapshot
+    - name: Install qemu and xorriso
       shell: bash
       run: >
         sudo apt-get -y update &&
-        sudo apt-get -y install qemu-system-x86 qemu-utils vncsnapshot
+        sudo apt-get -y install qemu-system-x86 qemu-utils xorriso
 
     - name: Packer version
       shell: bash
@@ -37,37 +37,18 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
 
-    - name: Run vncsnapshots in background
-      shell: bash
-      run: |2+
-        function vnc_port() {
-          ls -lt packer_cache/port/ | \
-            grep -o "59[0-9][0-9]" | \
-            head -n 1
-        }
-        function take_screenshots() {
-          mkdir -p ../debug/
-          sleep 25
-          vncsnapshot \
-            -count 800  \
-            -fps 10 \
-            localhost:$(vnc_port) \
-            ../debug/reactos.jpg
-        }
-        take_screenshots &
-
     - name: Build nightly
       shell: bash
       run: >
         rake
         BUILD=reactos-nightly
         FAIL_FAST=true
-        PACKER_LOG_PATH=../debug/build.log
+        PACKER_LOG_PATH=build.log
         PKR_VAR_headless=true
 
     - name: Upload artifacts on failure
       if: failure()
-      uses: actions/upload-artifact@v1.0.0
+      uses: actions/upload-artifact@v2
       with:
         name: debug.zip
-        path: ../debug
+        path: build.log 

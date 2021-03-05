@@ -66,6 +66,15 @@ def sha256sum(basename)
   'sha256:' << Digest::SHA256.file(path).hexdigest
 end
 
+def inject_unattend(iso)
+  iso_path = File.join(ISO_DIR, iso)
+  sh %(xorriso ) +
+     %(-overwrite on ) +
+     %(-dev "#{iso_path}" ) +
+     %(-boot_image "any" "replay" ) +
+     %(-map_single unattend.inf /reactos/unattend.inf )
+end
+
 # -----------------------------------------------------------------------------
 # Directories
 # -----------------------------------------------------------------------------
@@ -76,6 +85,21 @@ directory ISO_DIR
 # Tasks
 # -----------------------------------------------------------------------------
 task :default => :build
+
+desc "Display help"
+task :help do
+  #Rake::TaskManager.record_task_metadata = true
+  #Rake::Application.display_tasks_and_comments
+  puts <<~HELP
+    Usage:
+      rake <options> [task] <VARS>   
+
+    Variables: 
+      BUILD=<pattern>
+      PACKER_LOG_PATH=<path>
+      PKR_VAR_<packer_variable>=<value>
+  HELP
+end
 
 desc "Clean JSON files and packer images"
 task :clean_all => [:clean_images, :clean_logs]
@@ -120,6 +144,7 @@ task :build => [LOG_DIR, :extract_iso] do
                 else '*-release-*'
                 end
     iso = iso_file(file_glob)
+    inject_unattend(iso)
     sh %(packer build ) +
        %(-var-file="#{hcl}" ) +
        %(-var="iso_file=#{iso}" ) +
