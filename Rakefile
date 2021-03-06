@@ -12,6 +12,7 @@ require 'digest'
 # Globals
 # -----------------------------------------------------------------------------
 BUILD           = Regexp.new(ENV.fetch('BUILD', '.*'))
+TARGET          = ENV.fetch('TARGET', 'x86')
 PACKER_LOG      = ENV.fetch('PACKER_LOG', 1)
 PACKER_LOG_PATH = ENV.fetch('PACKER_LOG_PATH', false)
 FAIL_FAST       = ENV.fetch('FAIL_FAST', 'false')
@@ -46,16 +47,25 @@ def download_iso_archive(url)
   end
 end
 
-def fetch_bootcd_url
+def fetch_bootcd_url(target = 'x86')
   URI.open(ROS_DEV_URL) do |result|
     result.readlines.reverse.each do |line|
       next unless line =~ %r{reactos-bootcd-.*\.7z}
+      next unless line =~ %r{-#{target}-}
       return ROS_DEV_URL + line.gsub(%r{.*href=["'](.*?)["'].*}xs, '\1').strip
     end
   end
 end
 
-def iso_file(file_glob = '*.iso')
+def iso_glob(hcl, target = 'x86')
+  case hcl
+  when %r{nightly} then "*-dev-*#{target}*"
+  when %r{rc} then '*-RC-*'
+  else '*-release-*'
+  end
+end
+
+def iso_path(file_glob = '*.iso')
   cd ISO_DIR do
     Dir.glob(file_glob).sort[-1]
   end
@@ -67,6 +77,7 @@ def sha256sum(basename)
 end
 
 def inject_unattend(iso)
+  p iso
   iso_path = File.join(ISO_DIR, iso)
   sh %(xorriso ) +
      %(-overwrite on ) +
@@ -96,6 +107,7 @@ task :help do
 
     Variables: 
       BUILD=<pattern>
+      TARGET=x86|x64
       PACKER_LOG_PATH=<path>
       PKR_VAR_<packer_variable>=<value>
   HELP
@@ -118,7 +130,7 @@ end
 
 desc "Download zipped ISO"
 task :download_iso => ISO_DIR do
-  url = fetch_bootcd_url
+  url = fetch_bootcd_url(TARGET)
   download_iso_archive(url)
 end
 
@@ -138,17 +150,14 @@ task :build => [LOG_DIR, :extract_iso] do
     name = hcl.pathmap('%n').pathmap('%n')
     environment(name)
     next unless hcl =~ BUILD
-    file_glob = case hcl
-                when %r{nightly} then '*-dev-*'
-                when %r{rc} then '*-RC-*'
-                else '*-release-*'
-                end
-    iso = iso_file(file_glob)
-    inject_unattend(iso)
+    file_glob = iso_glob(hcl, TARGET)
+    p iso_file  = iso_path(file_glob)
+    inject_unattend(iso_file)
     sh %(packer build ) +
        %(-var-file="#{hcl}" ) +
-       %(-var="iso_file=#{iso}" ) +
-       %(-var="iso_checksum=#{sha256sum(iso)}" ) +
+       %(-var="target=#{TARGET}" ) +
+       %(-var="iso_file=#{iso_file}" ) +
+       %(-var="iso_checksum=#{sha256sum(iso_file)}" ) +
        %(#{pkr_vars} ) +
        %(-only="*.#{name}" ) +
        %(reactos.pkr.hcl) do |ok, res|

@@ -9,6 +9,9 @@ on:
   push:
     branches:
     - workflow/*
+  pull_request:
+    branches:
+    - main
   schedule:
     - cron: '13 4 * * *' # Sync submodules daily
   workflow_dispatch:
@@ -42,6 +45,7 @@ jobs:
       run: >
         rake
         BUILD=reactos-nightly
+        TARGET=x86
         FAIL_FAST=true
         PACKER_LOG_PATH=build.log
         PKR_VAR_headless=true
