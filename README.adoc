@@ -9,6 +9,7 @@ This is a an early version of my attempt to build KVM images from ReactOS ISOs.
 * https://www.packer.io/[Packer] >= 1.7.0
 * https://www.qemu.org/[Qemu] (Tested with version 5.0.0 but older version should work as well)
 * https://www.gnu.org/software/xorriso/[xorriso]
+* 7z
 * https://www.ruby-lang.org/[Ruby]
 * https://github.com/ruby/rake[Rake]
 
