@@ -19,6 +19,8 @@ FAIL_FAST       = ENV.fetch('FAIL_FAST', 'false')
 LOG_DIR         = 'logs'
 ISO_DIR         = 'iso/reactos'
 ROS_DEV_URL     = 'https://iso.reactos.org/bootcd/'
+WINE_GECKO_URL  = 'https://svn.reactos.org/amine/wine_gecko-2.40-x86.msi'
+WINE_GECKO_SHA1 = '8a3adedf3707973d1ed4ac3b2e791486abf814bd'
 
 # -----------------------------------------------------------------------------
 # Methodds
@@ -39,11 +41,11 @@ def pkr_vars
   end.join(' ')
 end
 
-def download_iso_archive(url)
-  cd ISO_DIR do
-    archive = File.basename(url)
-    return if File.exist?(archive) or File.exist?(archive.ext + '.iso')
-    IO.copy_stream(URI.open(url), archive)
+def download_file(url, target_dir = '.')
+  cd target_dir do
+    basename = File.basename(url)
+    return if File.exist?(basename) or File.exist?(basename.ext + '.iso')
+    IO.copy_stream(URI.open(url), basename)
   end
 end
 
@@ -76,14 +78,26 @@ def sha256sum(basename)
   'sha256:' << Digest::SHA256.file(path).hexdigest
 end
 
-def inject_unattend(iso)
-  p iso
-  iso_path = File.join(ISO_DIR, iso)
+def modify_iso(iso)
+  iso_path = Rake::FileList["**/#{iso}"].first
+  # preparation for injecting wine_gecko
+  # extract_file_from_iso(iso_path, '/reactos/reactos.cab', 'reactos.cab')
+  inject_file_into_iso(iso_path, 'unattend.inf', '/reactos/unattend.inf')
+end
+
+def extract_file_from_iso(iso_path, iso_file, local_file)
+  sh %(xorriso ) +
+     %(-osirrox on ) +
+     %(-indev "#{iso_path}" ) +
+     %(-extract "#{iso_file}" "#{local_file}")
+end
+
+def inject_file_into_iso(iso_path, local_file, iso_file)
   sh %(xorriso ) +
      %(-overwrite on ) +
      %(-dev "#{iso_path}" ) +
      %(-boot_image "any" "replay" ) +
-     %(-map_single unattend.inf /reactos/unattend.inf )
+     %(-map_single "#{local_file}" "#{iso_file}")
 end
 
 # -----------------------------------------------------------------------------
@@ -103,9 +117,9 @@ task :help do
   #Rake::Application.display_tasks_and_comments
   puts <<~HELP
     Usage:
-      rake <options> [task] <VARS>   
+      rake <options> [task] <VARS>
 
-    Variables: 
+    Variables:
       BUILD=<pattern>
       TARGET=x86|x64
       PACKER_LOG_PATH=<path>
@@ -131,7 +145,14 @@ end
 desc "Download zipped ISO"
 task :download_iso => ISO_DIR do
   url = fetch_bootcd_url(TARGET)
-  download_iso_archive(url)
+  download_file(url, ISO_DIR)
+end
+
+desc "Download gecko engine"
+task :download_gecko do
+  # disabled for the time being
+  # still working out some issues
+  # download_file(WINE_GECKO_URL)
 end
 
 desc "extract iso from archive"
@@ -145,14 +166,14 @@ task :extract_iso => :download_iso do
 end
 
 desc "Build OS images"
-task :build => [LOG_DIR, :extract_iso] do
+task :build => [LOG_DIR, :extract_iso, :download_gecko] do
   Rake::FileList['*.pkrvars.hcl'].each do |hcl|
     name = hcl.pathmap('%n').pathmap('%n')
     environment(name)
     next unless hcl =~ BUILD
     file_glob = iso_glob(hcl, TARGET)
-    p iso_file  = iso_path(file_glob)
-    inject_unattend(iso_file)
+    iso_file  = iso_path(file_glob)
+    modify_iso(iso_file)
     sh %(packer build ) +
        %(-var-file="#{hcl}" ) +
        %(-var="target=#{TARGET}" ) +
