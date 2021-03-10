@@ -2,53 +2,67 @@
 # Variables
 # -----------------------------------------------------------------------------
 variable "name" {
-  type = string
+  type        = string
+  description = "Operation system name e.g. reactos"
 }
 variable "version" {
-  type = string
+  type        = string
+  description = "Version to build e.g. 0.4.15."
 }
 variable "target" {
-  type    = string
-  default = "workstation"
+  type        = string
+  default     = "workstation"
+  description = "What to build e.g. rc, nightly or release."
 }
 variable "cpu" {
-  type    = string
-  default = "1"
+  type        = number
+  default     = "1"
+  description = "How many CPUs to allocate for the build virtual machine."
 }
 variable "memory" {
-  type    = string
-  default = "1024"
+  type        = number
+  default     = "1024"
+  description = "How much memory to allocate for the build virtual machine."
 }
 variable "destination_dir" {
-  type    = string
-  default = "artifacts"
+  type        = string
+  default     = "artifacts"
+  description = "Work directory for disk images"
 }
 variable "disk_size" {
-  type    = string
-  default = "4000"
+  type        = number
+  default     = "4000"
+  description = "Disk size to allocate to for the build."
 }
 variable "headless" {
-  type    = bool
-  default = "false"
+  type        = bool
+  default     = "false"
+  description = "Display QEMU window during build."
 }
 variable "http_dir" {
-  type    = string
-  default = "http"
+  type        = string
+  default     = "http"
+  description = "Packer http server's document root."
 }
 variable "iso_checksum" {
-  type = string
+  type        = string
+  description = "Checksum of ISO file used for installation."
 }
 variable "iso_file" {
-  type = string
+  type        = string
+  description = "Base name of ISO file used for installation."
 }
 variable "ros_user" {
-  type = string
+  type        = string
+  description = "Name of default ReactOS user."
 }
 variable "ros_organization" {
-  type = string
+  type        = string
+  description = "Name of organization the VM is associated with."
 }
 variable "ros_admin_password" {
-  type = string
+  type        = string
+  description = "Administrator's password."
 }
 
 # -----------------------------------------------------------------------------
