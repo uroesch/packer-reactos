@@ -34,6 +34,12 @@ Further checksum them with `sha256sum` and modify the values in the
 rake
 ----
 
+.Build only nightly
+[source,bash]
+----
+rake BUILD=nightly
+----
+
 TIP: With rake the environment variables `PACKER_LOG=1` and 
      `PACKER_LOG_PATH=logs/reactos-<release>.log` will be set for better
      debugging.
