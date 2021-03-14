@@ -2,7 +2,7 @@
 
 This is a an early version of my attempt to build KVM images from ReactOS ISOs.
 
-== Todo 
+== Todo
 * Automatic download of ISO files
 
 == Prerequisites
@@ -26,7 +26,7 @@ to the `iso/reactos` directory.
 Further checksum them with `sha256sum` and modify the values in the
 `reactos-<release>.pkrvars.hcl` files.
 
-== Build images 
+== Build images
 
 .Simple build with rake
 [source,bash]
@@ -40,11 +40,11 @@ rake
 rake BUILD=nightly
 ----
 
-TIP: With rake the environment variables `PACKER_LOG=1` and 
+TIP: With rake the environment variables `PACKER_LOG=1` and
      `PACKER_LOG_PATH=logs/reactos-<release>.log` will be set for better
      debugging.
 
-.Simple build manually 
+.Simple build manually
 [source,bash]
 ----
 packer build -var-file="reactos-rc.pkrvars.hcl" -only="*.reactos-rc" reactos.pkr.hcl
