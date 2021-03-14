@@ -50,6 +50,16 @@ jobs:
         PACKER_LOG_PATH=build.log
         PKR_VAR_headless=true
 
+    - name: Build RC
+      shell: bash
+      run: >
+        rake
+        BUILD=reactos-rc
+        TARGET=x86
+        FAIL_FAST=true
+        PACKER_LOG_PATH=build.log
+        PKR_VAR_headless=true
+
     - name: Upload artifacts on failure
       if: failure()
       uses: actions/upload-artifact@v2

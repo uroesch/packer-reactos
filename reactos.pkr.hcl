@@ -78,7 +78,7 @@ locals {
 # -----------------------------------------------------------------------------
 # Sources
 # -----------------------------------------------------------------------------
-source "qemu" "reactos" {
+source "qemu" "reactos_base" {
   accelerator      = "none"
   /*
   boot_command     = [
@@ -149,8 +149,44 @@ source "qemu" "reactos" {
     # both cd and disk does not work because the index for the disk is not
     # specified. The disk is declare before the cd with index=0 and an
     # error occurs.
-    ["-drive", "file=${local.output_directory}/packer-${var.name},if=ide,index=1,cache=none,discard=ignore,format=qcow2"],
-    ["-drive", "file=iso/reactos/${var.iso_file},if=ide,index=0,id=cdrom,media=cdrom"]
+    ["-drive", "file=${local.output_directory}/packer-reactos_base,if=ide,index=1,cache=none,discard=ignore,format=qcow2"],
+    ["-drive", "file=iso/reactos/${var.iso_file},if=ide,index=0,id=cdrom,media=cdrom"],
+    # ["-drive", "file=iso/reactos/virtio-win.iso,if=ide,index=2,id=virtio,media=cdrom"]
+  ]
+}
+
+source "qemu" "reactos_stage2" {
+  accelerator      = "none"
+  boot_wait        = "3s"
+  cdrom_interface  = "ide"
+  communicator     = "none"
+  disk_cache       = "none"
+  disk_size        = "${var.disk_size}"
+  disk_image       = true
+  format           = "qcow2"
+  headless         = "${var.headless}"
+  host_port_max    = 2229
+  host_port_min    = 2222
+  http_directory   = "${var.http_dir}"
+  http_port_min    = 10082
+  http_port_max    = 10089
+  vnc_port_min     = 5901
+  vnc_port_max     = 5999
+  iso_checksum     = "none"
+  iso_url          = "images/${local.dist_name}-${var.target}.qcow2"
+  memory           = "${var.memory}"
+  net_device       = "rtl8139"
+  output_directory = "${local.output_directory}"
+  shutdown_timeout = "20m"
+  qemuargs         = [
+    ["-m", "${var.memory}M"],
+    ["-smp", "${var.cpu}"],
+    # normally the the drives are added by packer itself but using ide for
+    # both cd and disk does not work because the index for the disk is not
+    # specified. The disk is declare before the cd with index=0 and an
+    # error occurs.
+    ["-drive", "file=${local.output_directory}/packer-reactos_stage2,if=ide,index=1,cache=none,discard=ignore,format=qcow2"],
+    ["-drive", "file=iso/reactos/virtio-win.iso,if=ide,index=0,id=cdrom,media=cdrom"]
   ]
 }
 
@@ -159,17 +195,22 @@ source "qemu" "reactos" {
 # -----------------------------------------------------------------------------
 build {
   name    = "reactos-rc"
-  source "source.qemu.reactos" {
+  source "qemu.reactos_base" {
     name = "reactos-rc"
   }
-  source "source.qemu.reactos" {
+  source "qemu.reactos_base" {
     name = "reactos-nightly"
   }
   /*
-  source "source.qemu.reactos" {
+  source "qemu.reactos_base" {
     name = "reactos-release"
   }
   */
+
+  source "qemu.reactos_stage2" {
+    name = "reactos-nightly-stage2"
+  }
+
   post-processor "shell-local" {
     script           = "scripts/rename-image.sh"
     environment_vars = [

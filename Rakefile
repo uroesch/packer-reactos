@@ -19,8 +19,10 @@ FAIL_FAST       = ENV.fetch('FAIL_FAST', 'false')
 LOG_DIR         = 'logs'
 ISO_DIR         = 'iso/reactos'
 ROS_DEV_URL     = 'https://iso.reactos.org/bootcd/'
+ROS_RC_URL      = 'https://sourceforge.net/projects/reactos/files/ReactOS/0.4.14/'
 WINE_GECKO_URL  = 'https://svn.reactos.org/amine/wine_gecko-2.40-x86.msi'
 WINE_GECKO_SHA1 = '8a3adedf3707973d1ed4ac3b2e791486abf814bd'
+VIRTIO_ISO_URL  = 'https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso'
 
 # -----------------------------------------------------------------------------
 # Methodds
@@ -41,15 +43,35 @@ def pkr_vars
   end.join(' ')
 end
 
+def basename(url)
+  # remove the '/download' from the sf url
+  File.basename(url.sub(%r{/download$}, ''))
+end
+
+def iso_basename(basename)
+  # construct the name after unpacking
+  basename.ext.sub(%r{-iso$}, '') + '.iso'
+end
+
 def download_file(url, target_dir = '.')
   cd target_dir do
-    basename = File.basename(url)
-    return if File.exist?(basename) or File.exist?(basename.ext + '.iso')
+    basename = basename(url)
+    return if File.exist?(basename) or File.exist?(iso_basename(basename))
+    puts "Downloading '#{url}' to '#{basename}'"
     IO.copy_stream(URI.open(url), basename)
   end
 end
 
-def fetch_bootcd_url(target = 'x86')
+def fetch_rc_url
+  URI.open(ROS_RC_URL) do |result|
+    result.readlines.each do |line|
+      next unless line =~ %r{href=.*-RC-.*-iso\.zip}
+      return line.gsub(%r{.*href=["'](.*?)["'].*}xs, '\1').strip
+    end
+  end
+end
+
+def fetch_dev_url(target = 'x86')
   URI.open(ROS_DEV_URL) do |result|
     result.readlines.reverse.each do |line|
       next unless line =~ %r{reactos-bootcd-.*\.7z}
@@ -127,38 +149,52 @@ task :help do
   HELP
 end
 
-desc "Clean JSON files and packer images"
-task :clean_all => [:clean_images, :clean_logs]
+desc "Clean up everything (disk images, logs, old iso files)"
+task :clean_all => [:clean_logs, :clean_isos]
 
 desc "Clean logs"
 task :clean_logs do
   rm_rf LOG_DIR
 end
 
-desc "Clean images"
-task :clean_images do
-  destination_dir.each do |dir|
-    rm_rf dir
-  end
+desc "Clean outdated ISO images"
+task :clean_isos do
+  isos = Rake::FileList["#{ISO_DIR}/reactos-bootcd*"]
+  isos.sort!
+  isos.pop
+  rm isos
 end
 
 desc "Download zipped ISO"
-task :download_iso => ISO_DIR do
-  url = fetch_bootcd_url(TARGET)
-  download_file(url, ISO_DIR)
+task :download_iso, [:build] do |task, build|
+  case build
+  when %r{rc$}
+    url = fetch_rc_url
+    download_file(url, ISO_DIR)
+  when %r{nightly$}
+    url = fetch_dev_url(TARGET)
+    download_file(url, ISO_DIR)
+  end
+  Rake::Task[:extract_iso].execute
+end
+
+desc "Download virtio ISO"
+task :download_virtio_iso do
+  # disabled for now
+  # download_file(VIRTIO_ISO_URL, ISO_DIR)
 end
 
 desc "Download gecko engine"
-task :download_gecko do
+task :download_gecko => :download_virtio_iso do
   # disabled for the time being
   # still working out some issues
   # download_file(WINE_GECKO_URL)
 end
 
 desc "extract iso from archive"
-task :extract_iso => :download_iso do
+task :extract_iso do
   cd ISO_DIR do
-    Rake::FileList['*.7z'].each do |archive|
+    Rake::FileList['*.7z', '*.zip'].each do |archive|
       sh %(7z x -y "#{archive}" )
       sh %(rm #{archive})
     end
@@ -166,15 +202,17 @@ task :extract_iso => :download_iso do
 end
 
 desc "Build OS images"
-task :build => [LOG_DIR, :extract_iso, :download_gecko] do
+task :build => [ISO_DIR, LOG_DIR, :download_gecko] do
   Rake::FileList['*.pkrvars.hcl'].each do |hcl|
     name = hcl.pathmap('%n').pathmap('%n')
     environment(name)
     next unless hcl =~ BUILD
+    Rake::Task[:download_iso].execute(name)
     file_glob = iso_glob(hcl, TARGET)
     iso_file  = iso_path(file_glob)
     modify_iso(iso_file)
     sh %(packer build ) +
+       %(-parallel-builds=1 ) +
        %(-var-file="#{hcl}" ) +
        %(-var="target=#{TARGET}" ) +
        %(-var="iso_file=#{iso_file}" ) +

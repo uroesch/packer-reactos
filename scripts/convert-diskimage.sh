@@ -13,9 +13,11 @@ trap cleanup EXIT
 # -----------------------------------------------------------------------------
 # Global
 # -----------------------------------------------------------------------------
+declare -r VERSION=0.4.0
 declare -r SCRIPT=${0##*/}
 declare -r BASE_DIR=$(readlink -f $(dirname ${0})/..)
 declare -r IMAGES_DIR=${BASE_DIR}/images
+declare -g IMAGE_PATH=${IMAGE_PATH:-}
 declare -g FORMAT="${FORMAT:-}"
 declare -a FORMATS=()
 declare -g DIST_NAME=${DIST_NAME:-}
@@ -41,6 +43,7 @@ function usage() {
                             * vhdx (azure, hyper-v)
                             * gcp  (google cloud platform)
     -n | --name <name>      Name of the image e.g. ubuntu-20.04
+    -p | --path <sourceimg> Path to the source image.
     -t | --target <target>  Target suffice e.g. server
 
 USAGE
@@ -53,6 +56,7 @@ function parse_options() {
     -t|--target) shift; TARGET=${1};;
     -n|--name)   shift; DIST_NAME=${1};;
     -f|--format) shift; FORMATS+=( "${1}" );;
+    -p|--path)   shift; IMAGE_PATH="${1}";;
     -h|--help)   usage 0;;
     esac
     shift
@@ -66,6 +70,10 @@ function evaluate_options() {
 
 function find_image() {
   local dist_name=${1}; shift;
+  if [[ -n ${IMAGE_NAME} && -f ${IMAGE_NAME} ]]; then
+    echo ${IMAGE_NAME}
+    return
+  fi
   find ${IMAGES_DIR} -name "${dist_name}-${TARGET}.qcow2"
 }
 
