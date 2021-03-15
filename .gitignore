@@ -1,4 +1,5 @@
 .rake_tasks~
+unattend.inf
 logs
 iso
 packer_cache

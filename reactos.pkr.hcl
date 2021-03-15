@@ -52,15 +52,27 @@ variable "iso_file" {
   type        = string
   description = "Base name of ISO file used for installation."
 }
-variable "ros_user" {
+variable "ros_fstype" {
+  type        = string
+  description = "filsystem to use; currently either 'FAT' or 'BtrFS'."
+}
+variable "ros_productoption" {
+  type        = string
+  description = "Installation type; currently either 'server' or 'workstation'."
+}
+variable "ros_fullname" {
   type        = string
   description = "Name of default ReactOS user."
 }
-variable "ros_organization" {
+variable "ros_orgname" {
   type        = string
   description = "Name of organization the VM is associated with."
 }
-variable "ros_admin_password" {
+variable "ros_computername" {
+  type        = string
+  description = "Name of the computer aka. hostname."
+}
+variable "ros_adminpassword" {
   type        = string
   description = "Administrator's password."
 }
