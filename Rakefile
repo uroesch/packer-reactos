@@ -18,6 +18,7 @@ PACKER_LOG_PATH = ENV.fetch('PACKER_LOG_PATH', false)
 FAIL_FAST       = ENV.fetch('FAIL_FAST', 'false')
 LOG_DIR         = 'logs'
 ISO_DIR         = 'iso/reactos'
+TEMPLATE_DIR    = 'templates'
 ROS_DEV_URL     = 'https://iso.reactos.org/bootcd/'
 ROS_RC_URL      = 'https://sourceforge.net/projects/reactos/files/ReactOS/0.4.14/'
 WINE_GECKO_URL  = 'https://svn.reactos.org/amine/wine_gecko-2.40-x86.msi'
@@ -27,6 +28,8 @@ VIRTIO_ISO_URL  = 'https://fedorapeople.org/groups/virt/virtio-win/direct-downlo
 # -----------------------------------------------------------------------------
 # Methodds
 # -----------------------------------------------------------------------------
+
+# manage environment variables passed to packer
 def environment(dist_name)
   ENV['PACKER_LOG']      = PACKER_LOG.to_s
   if PACKER_LOG_PATH != false
@@ -36,6 +39,32 @@ def environment(dist_name)
   end
 end
 
+# parse the packer var files 'pkrvars.hcl'
+# not fully bullet proof yet!
+def parse_var_file(file)
+  hcl_vars = {}
+  begin
+    File.exist?(file)
+    content = File.read(file)
+    # remove comments
+    content = content.gsub(%r{/\*.*?\*/}m, '')
+    content = content.gsub(%r{=\s*\[(.*?)\]}m) { |x| x.gsub(%r{\s*\n\s*}, '') }
+    content.each_line do |line|
+      line.strip!
+      next if line.empty?
+      next if line.start_with?(%r{#|//})
+      key, value = line.split(%r{\s*=\s*})
+      value = value.to_s.gsub(%r{^["']|["']$}, '')
+      hcl_vars[key] = value
+    end
+  end
+  # expand the parser to locals to get this value
+  hcl_vars['dist_name'] = hcl_vars.values_at('name', 'version').join('_')
+  hcl_vars
+end
+
+# Read environment variables starting with PKR_VAR_ and
+# convert to command line switch
 def pkr_vars
   variables = ENV.select { |k, _v| k.start_with?('PKR_VAR_') }
   variables.map do |key, value|
@@ -43,16 +72,34 @@ def pkr_vars
   end.join(' ')
 end
 
+# write config file based on template
+def write_config(var_file)
+  @config = parse_var_file(var_file)
+  glob = File.join(TEMPLATE_DIR, '*.erb')
+  Rake::FileList[glob].each do |template|
+    basename = File.basename(template.ext)
+    content  = File.read(template)
+    File.open(basename, 'w') do |fh|
+      puts "Writing config file '#{basename}'"
+      fh.write ERB.new(content).result(binding)
+    end
+  end
+end
+
+# return the base name of a file taking into account
+# the whacky sourceforge.net url.
 def basename(url)
   # remove the '/download' from the sf url
   File.basename(url.sub(%r{/download$}, ''))
 end
 
+# derive the basename from the various reactos zip file names.
 def iso_basename(basename)
   # construct the name after unpacking
   basename.ext.sub(%r{-iso$}, '') + '.iso'
 end
 
+# download a file to a directory
 def download_file(url, target_dir = '.')
   cd target_dir do
     basename = basename(url)
@@ -62,6 +109,7 @@ def download_file(url, target_dir = '.')
   end
 end
 
+# determine the latest RC release URL
 def fetch_rc_url
   URI.open(ROS_RC_URL) do |result|
     result.readlines.each do |line|
@@ -71,7 +119,8 @@ def fetch_rc_url
   end
 end
 
-def fetch_dev_url(target = 'x86')
+# determine the latest nightly release URL
+def fetch_nightly_url(target = 'x86')
   URI.open(ROS_DEV_URL) do |result|
     result.readlines.reverse.each do |line|
       next unless line =~ %r{reactos-bootcd-.*\.7z}
@@ -81,6 +130,7 @@ def fetch_dev_url(target = 'x86')
   end
 end
 
+# create an glob for the various ISO file naming conventions
 def iso_glob(hcl, target = 'x86')
   case hcl
   when %r{nightly} then "*-dev-*#{target}*"
@@ -89,17 +139,20 @@ def iso_glob(hcl, target = 'x86')
   end
 end
 
+# return the latest version of the ISO file in iso directory
 def iso_path(file_glob = '*.iso')
   cd ISO_DIR do
     Dir.glob(file_glob).sort[-1]
   end
 end
 
+# create a sha256 sum from the target ISO file
 def sha256sum(basename)
   path = File.join(ISO_DIR, basename)
   'sha256:' << Digest::SHA256.file(path).hexdigest
 end
 
+# modify the ISO file for unattended installation via file injection.
 def modify_iso(iso)
   iso_path = Rake::FileList["**/#{iso}"].first
   # preparation for injecting wine_gecko
@@ -107,6 +160,7 @@ def modify_iso(iso)
   inject_file_into_iso(iso_path, 'unattend.inf', '/reactos/unattend.inf')
 end
 
+# extract a particular file from the ISO
 def extract_file_from_iso(iso_path, iso_file, local_file)
   sh %(xorriso ) +
      %(-osirrox on ) +
@@ -114,6 +168,7 @@ def extract_file_from_iso(iso_path, iso_file, local_file)
      %(-extract "#{iso_file}" "#{local_file}")
 end
 
+# inject a modified file into the ISO / may overwrite existing file.
 def inject_file_into_iso(iso_path, local_file, iso_file)
   sh %(xorriso ) +
      %(-overwrite on ) +
@@ -172,7 +227,7 @@ task :download_iso, [:build] do |task, build|
     url = fetch_rc_url
     download_file(url, ISO_DIR)
   when %r{nightly$}
-    url = fetch_dev_url(TARGET)
+    url = fetch_nightly_url(TARGET)
     download_file(url, ISO_DIR)
   end
   Rake::Task[:extract_iso].execute
@@ -205,6 +260,7 @@ desc "Build OS images"
 task :build => [ISO_DIR, LOG_DIR, :download_gecko] do
   Rake::FileList['*.pkrvars.hcl'].each do |hcl|
     name = hcl.pathmap('%n').pathmap('%n')
+    write_config(hcl)
     environment(name)
     next unless hcl =~ BUILD
     Rake::Task[:download_iso].execute(name)
