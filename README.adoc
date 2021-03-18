@@ -58,8 +58,8 @@ packer build -var-file="reactos-nightly.pkrvars.hcl" -only="*.reactos-nightly" r
 == Known issues
 
 * The following two builds are not yet working as they produce kernel panics.
-  * 0.4.13
-  * 0.4.15 nightly x64
+  ** 0.4.13
+  ** 0.4.15 nightly x64
 
 == Todo
 * [ ] Automatic download of ISO files.
