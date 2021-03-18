@@ -3,7 +3,12 @@
 This is a an early version of my attempt to build KVM images from ReactOS ISOs.
 
 == Todo
-* Automatic download of ISO files
+* [ ] Automatic download of ISO files.
+** [x] Download of nightly builds.
+** [x] Download of RC releases.
+** [ ] Download of Releases.
+* [x] Run with unattend.inf
+* [ ] Install `virtio` drivers
 
 == Prerequisites
 * https://www.packer.io/[Packer] >= 1.7.0
@@ -20,13 +25,9 @@ This is a an early version of my attempt to build KVM images from ReactOS ISOs.
 NOTE: Currently only RC and nightly images work the boot CDs for `0.4.13`
       are bluescreening!
 
-Download the zipped ISO images from the respective websites, unpack them
-to the `iso/reactos` directory.
-
-Further checksum them with `sha256sum` and modify the values in the
-`reactos-<release>.pkrvars.hcl` files.
-
 == Build images
+
+=== Fully automated with `rake`
 
 .Simple build with rake
 [source,bash]
@@ -40,25 +41,24 @@ rake
 rake BUILD=nightly
 ----
 
-TIP: With rake the environment variables `PACKER_LOG=1` and
+TIP: With `rake` the environment variables `PACKER_LOG=1` and
      `PACKER_LOG_PATH=logs/reactos-<release>.log` will be set for better
      debugging.
+
+=== Manual build
+
+* Download the zipped ISO images from the respective websites, unpack them to 
+  the `iso/reactos` directory. 
+
+* Further checksum them with `sha256sum` and modify the values in the 
+  `reactos-<release>.pkrvars.hcl` files.
+
+* Inject a modified the `unattend.inf` file into the iso as outlined 
+  https://gist.github.com/uroesch/49d729fb5c86ed54974c0bca50873761[here]. 
 
 .Simple build manually
 [source,bash]
 ----
 packer build -var-file="reactos-rc.pkrvars.hcl" -only="*.reactos-rc" reactos.pkr.hcl
 packer build -var-file="reactos-nightly.pkrvars.hcl" -only="*.reactos-nightly" reactos.pkr.hcl
-----
-
-.Override default password, user and organization
-[source,bash]
-----
-packer build \
-  -var="ros_user=Road Runner" \
-  -var="ros_organization=acme.com" \
-  -var="ros_admin_password=Wile-E.-Coyote" \
-  -var-file="reactos-rc.pkrvars.hcl" \
-  -only="*.reactos-rc" \
-  reactos.pkr.hcl
 ----
