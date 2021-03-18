@@ -2,14 +2,6 @@
 
 This is a an early version of my attempt to build KVM images from ReactOS ISOs.
 
-== Todo
-* [ ] Automatic download of ISO files.
-** [x] Download of nightly builds.
-** [x] Download of RC releases.
-** [ ] Download of Releases.
-* [x] Run with unattend.inf
-* [ ] Install `virtio` drivers
-
 == Prerequisites
 * https://www.packer.io/[Packer] >= 1.7.0
 * https://www.qemu.org/[Qemu] (Tested with version 5.0.0 but older version should work as well)
@@ -62,3 +54,17 @@ TIP: With `rake` the environment variables `PACKER_LOG=1` and
 packer build -var-file="reactos-rc.pkrvars.hcl" -only="*.reactos-rc" reactos.pkr.hcl
 packer build -var-file="reactos-nightly.pkrvars.hcl" -only="*.reactos-nightly" reactos.pkr.hcl
 ----
+
+== Known issues
+
+* The following two builds are not yet working as they produce kernel panics.
+  * 0.4.13
+  * 0.4.15 nightly x64
+
+== Todo
+* [ ] Automatic download of ISO files.
+** [x] Download of nightly builds.
+** [x] Download of RC releases.
+** [ ] Download of Releases.
+* [x] Run with unattend.inf
+* [ ] Install `virtio` drivers
