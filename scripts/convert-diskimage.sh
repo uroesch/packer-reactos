@@ -13,7 +13,7 @@ trap cleanup EXIT
 # -----------------------------------------------------------------------------
 # Global
 # -----------------------------------------------------------------------------
-declare -r VERSION=0.4.0
+declare -r VERSION=0.5.0
 declare -r SCRIPT=${0##*/}
 declare -r BASE_DIR=$(readlink -f $(dirname ${0})/..)
 declare -r IMAGES_DIR=${BASE_DIR}/images
@@ -68,10 +68,26 @@ function evaluate_options() {
   FORMATS+=( ${FORMAT} )
 }
 
+function image_type() {
+  local path=${1}; shift;
+  [[ -f ${path} ]] || echo "unknown"
+  case $(file ${path}) in
+  *QCOW2*)   echo qcow2;;
+  *DOS/MBR*) echo raw;;
+  *)         echo "unknown";;
+  esac
+}
+
+
+function image_out() {
+  local extension=${1} shift;
+  echo "${IMAGES_DIR}/${DIST_NAME}-${TARGET}.${extension}"
+}
+
 function find_image() {
   local dist_name=${1}; shift;
-  if [[ -n ${IMAGE_NAME} && -f ${IMAGE_NAME} ]]; then
-    echo ${IMAGE_NAME}
+  if [[ -n ${IMAGE_PATH} && -f ${IMAGE_PATH} ]]; then
+    echo ${IMAGE_PATH}
     return
   fi
   find ${IMAGES_DIR} -name "${dist_name}-${TARGET}.qcow2"
@@ -112,7 +128,7 @@ function convert_disk() {
   local img_out=${1}; shift;
   local options=${1}; shift;
   qemu-img convert \
-    -f ${img_in##*.} \
+    -f $(image_type ${img_in}) \
     ${options:+-o ${options}} \
     -O ${method} \
     "${img_in}" \
@@ -123,7 +139,7 @@ function to_vhd() {
   local dist_name=${1}; shift;
   local img_in=$(find_image ${dist_name})
   local img_raw="${img_in%.*}.raw"
-  local img_out="${img_in%.*}.vhd"
+  local img_out="$(image_out vhd)"
   to_raw_image "${img_in}" "${img_raw}"
   align_image "${img_raw}"
   convert_disk vpc "${img_raw}" "${img_out}" subformat=fixed,force_size
@@ -133,14 +149,14 @@ function to_vhd() {
 function to_vhdx() {
   local dist_name=${1}; shift;
   local img_in=$(find_image ${dist_name})
-  local img_out="${img_in%.*}.vhdx"
+  local img_out="$(image_out vhdx)"
   convert_disk vhdx "${img_in}" "${img_out}" subformat=dynamic
 }
 
 function to_vmdk() {
   local dist_name=${1}; shift;
   local img_in=$(find_image ${dist_name})
-  local img_out="${img_in%.*}.vmdk"
+  local img_out="$(image_out vmdk)"
   convert_disk vmdk "${img_in}" "${img_out}" \
     adapter_type=lsilogic,subformat=streamOptimized,compat6
   touch --reference "${img_in}" "${img_out}"
@@ -150,7 +166,7 @@ function to_gcp() {
   local dist_name=${1}; shift;
   local img_in=$(find_image ${dist_name})
   local img_raw="${img_in%.*}.raw"
-  local img_out="${img_in%.*}.tar.gz"
+  local img_out="$(image_out tar.gz)"
   to_raw_image "${img_in}" "${img_raw}"
   align_image "${img_raw}"
   tar \
