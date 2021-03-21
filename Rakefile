@@ -260,9 +260,9 @@ desc "Build OS images"
 task :build => [ISO_DIR, LOG_DIR, :download_gecko] do
   Rake::FileList['*.pkrvars.hcl'].each do |hcl|
     name = hcl.pathmap('%n').pathmap('%n')
+    next unless hcl =~ BUILD
     write_config(hcl)
     environment(name)
-    next unless hcl =~ BUILD
     Rake::Task[:download_iso].execute(name)
     file_glob = iso_glob(hcl, TARGET)
     iso_file  = iso_path(file_glob)

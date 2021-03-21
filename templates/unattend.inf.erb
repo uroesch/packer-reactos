@@ -82,7 +82,8 @@ ProductOption = <%=
 <%# rapps in the nightlies can auto install gecko but not yet in 0.4.14  %>
 %SystemRoot%\system32\cmd.exe /c "rapps /install gecko & shutdown /s /f /t 5"
 <% else %>
-%SystemRoot%\system32\cmd.exe /c "shutdown /s /f /t 5"
+<%# for older versions of ReactOS we simulate the rapps install %>
+%SystemRoot%\system32\cmd.exe /c "cd ""%USERPROFILE%\My Documents\"" & mkdir ""RAPPS Downloads"" & cd ""RAPPS Downloads"" & dwnl <%= WINE_GECKO_URL %> & msiexec.exe /i <%= File.basename(WINE_GECKO_URL) %> & shutdown /s /f /t 5"
 <% end %>
 ; Enable the next line (+ the GuiRunOnce section) to enable the lautus theme
 ; "rundll32.exe shell32.dll,Control_RunDLL desk.cpl desk,@Appearance /Action:ActivateMSTheme /file:%SYSTEMROOT%\Resources\themes\lautus\lautus.msstyles"
