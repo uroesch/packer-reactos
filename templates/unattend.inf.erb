@@ -12,7 +12,7 @@ UnattendSetupEnabled = yes
 ; Install to \Device\Harddisk0\Partition1\ReactOS
 DestinationDiskNumber = 0
 DestinationPartitionNumber = 1
-InstallationDirectory=ReactOS
+InstallationDirectory = ReactOS
 
 ; MBRInstallType=0  skips MBR installation
 ; MBRInstallType=1  install MBR on floppy
@@ -25,7 +25,7 @@ ComputerName="<%= @config.fetch('ros_computername', 'ACME') %>"
 AdminPassword="<%= @config.fetch('ros_adminpassword', 'TopSecret') %>"
 
 ; TimeZone is set GMT as default
-TimeZoneIndex=85
+TimeZoneIndex = 85
 
 ; enable this setting to disable daylight saving changes
 ; DisableAutoDaylightTimeSet = 1
@@ -33,14 +33,13 @@ TimeZoneIndex=85
 ; enable this setting to format the selected partition
 ; 1 - format enabled
 ; 0 - format disabled
-FormatPartition=1
+FormatPartition = 1
 
 ; enable this setting to automatically create a partition
 ; during installation
 ; 1 - enabled
 ; 0 - disabled
 AutoPartition = 1
-
 
 ; choose default file system type
 ; 0 - FAT
@@ -79,7 +78,12 @@ ProductOption = <%=
 ; after 3rd boot
 ;
 [GuiRunOnce]
+<% if @config['version'] == 'nightly' %>
+<%# rapps in the nightlies can auto install gecko but not yet in 0.4.14  %>
+%SystemRoot%\system32\cmd.exe /c "rapps /install gecko & shutdown /s /f /t 5"
+<% else %>
 %SystemRoot%\system32\cmd.exe /c "shutdown /s /f /t 5"
+<% end %>
 ; Enable the next line (+ the GuiRunOnce section) to enable the lautus theme
 ; "rundll32.exe shell32.dll,Control_RunDLL desk.cpl desk,@Appearance /Action:ActivateMSTheme /file:%SYSTEMROOT%\Resources\themes\lautus\lautus.msstyles"
 

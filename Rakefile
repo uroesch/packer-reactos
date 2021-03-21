@@ -81,7 +81,7 @@ def write_config(var_file)
     content  = File.read(template)
     File.open(basename, 'w') do |fh|
       puts "Writing config file '#{basename}'"
-      fh.write ERB.new(content).result(binding)
+      fh.write ERB.new(content, trim_mode: '>').result(binding)
     end
   end
 end
