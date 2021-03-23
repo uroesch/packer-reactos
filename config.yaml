@@ -1,0 +1,7 @@
+---
+release:
+  url: https://sourceforge.net/projects/reactos/files/ReactOS/0.4.13/
+rc:
+  url: https://sourceforge.net/projects/reactos/files/ReactOS/0.4.14/
+nightly:
+  url: https://iso.reactos.org/bootcd/
