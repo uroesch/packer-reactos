@@ -75,7 +75,7 @@ module ReactOS
 
     # determine the latest nightly release URL
     def self.nightly_url(target = 'x86')
-      fetch_url('nightly').reverse.each do |line|
+      fetch_url('nightly').each do |line|
         next unless line =~ %r{reactos-bootcd-.*\.7z}
         next unless line =~ %r{-#{target}-}
         return config['nightly']['url'] +
@@ -114,9 +114,10 @@ module ReactOS
     end
 
     def self.fetch_url(name)
-      data = config[name]
+      data   = config[name]
       result = URI.open(data['url'])
-      result.readlines
+      lines  = result.readlines
+      data.fetch('top_down', true) ? lines : lines.reverse
     end
   end
 end
