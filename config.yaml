@@ -1,7 +1,10 @@
 ---
 release:
+  top_down: true
   url: https://sourceforge.net/projects/reactos/files/ReactOS/0.4.13/
 rc:
+  top_down: true
   url: https://sourceforge.net/projects/reactos/files/ReactOS/0.4.14/
 nightly:
+  top_down: false
   url: https://iso.reactos.org/bootcd/
