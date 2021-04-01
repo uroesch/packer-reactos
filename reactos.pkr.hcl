@@ -143,7 +143,9 @@ source "qemu" "reactos_base" {
   headless         = "${var.headless}"
   host_port_max    = 2229
   host_port_min    = 2222
+  /* if not present throws error in v1.7.1
   http_directory   = "${var.http_dir}"
+  */
   http_port_min    = 10082
   http_port_max    = 10089
   vnc_port_min     = 5901
@@ -218,7 +220,6 @@ build {
     name = "reactos-release"
   }
   */
-
   source "qemu.reactos_stage2" {
     name = "reactos-nightly-stage2"
   }
@@ -232,4 +233,17 @@ build {
       "TARGET=${local.dist_name}-${var.target}"
     ]
   }
+  /*
+  post-processor "shell-local" {
+    script           = "scripts/convert-diskimage.sh"
+    environment_vars = [
+      "FORMAT=gcp",
+      "DEBUG=true",
+      "DEST_DIR=${local.output_base}",
+      "IMAGE_PATH=${local.output_base}/${local.dist_name}-${var.target}.qcow2",
+      "DIST_NAME=${local.dist_name}",
+      "TARGET=${var.target}"
+    ]
+  }
+  */
 }
