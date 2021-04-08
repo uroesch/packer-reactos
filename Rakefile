@@ -94,7 +94,6 @@ module ReactOS
     # return the basename and iso file name of a url
     # file taking into account the whacky sourceforge.net url.
     def self.basename(url)
-      p url
       # remove the '/download' from the sf url
       basename = File.basename(url.sub(%r{/download$}, ''))
       # determine the name after extraction from zip
