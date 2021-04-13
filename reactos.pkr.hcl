@@ -92,47 +92,6 @@ locals {
 # -----------------------------------------------------------------------------
 source "qemu" "reactos_base" {
   accelerator      = "none"
-  /*
-  boot_command     = [
-    "<wait10>",                                # wait for setup screen
-    "<enter><wait3>",                          # language selection -> United States
-    "<enter><wait3>",                          # welcome -> install or upgrade
-    "<enter><wait3>",                          # version status -> continue
-    "<enter><wait3>",                          # device settings -> accept device settings
-    "<enter><wait3>",                          # disk settings -> use unpartitioned space
-    "<enter><wait3>",                          # format partition -> FAT (quick format)
-    "<enter><wait3>",                          # format partition -> confirmation
-    "<enter><wait3>",                          # reactos install directory
-    "<wait120>",                               # installation process
-    "<enter><wait3>",                          # install boot loader
-    "<wait15>",                                # reboot countdown
-    "<wait15>",                                # boot menu countdown
-    "<wait120>",                               # wait for graphical dialogs after boot
-    "<enter><wait3>",                          # welcome setup wizard -> next
-    "<enter><wait3>",                          # acknowledgements -> next
-    "<down><wait><enter><wait3>",              # product options -> ReactOS Server (default) -> next
-    "<enter><wait3>",                          # regional settings -> next
-    "${var.ros_user}<tab><wait>",              # personalize your software -> Name
-    "${var.ros_organization}<enter><wait>",    # personalize your software -> Organization -> next
-    "<tab>",                                   # computer name & admin pw -> skip name -> tab
-    "${var.ros_admin_password}<tab>",          # computer name & admin pw -> admin pw -> tab
-    "${var.ros_admin_password}<enter><wait3>", # computer name & admin pw -> admin pw confirm -> next
-    "<enter><wait3>",                          # date and time -> next
-    "<enter><wait3>",                          # appearance -> next
-    "<enter><wait3>",                          # network settings -> typical -> next
-    "<enter><wait3>",                          # workgrou and network domain -> default -> next
-    "<wait15>",                                # installation process
-    "<tab><enter>",                            # wine gecko installer -> cancel
-    "<wait3><enter>",                          # reboot -> finish
-    "<wait10>",                                # boot menu countdown
-    "<wait120>",                               # startup wait time
-    "<tab><enter><wait3>",                     # driver installation -> install
-    "<spacebar><enter><wait3>",                # do not ask again -> cancel
-    "<leftAltOn><f4><leftAltOff><wait3>",      # menu flyout
-    "<leftAltOn>s<leftAltOff><wait3>",         # On nightly -> select the shutdown button
-    "<enter><wait3>"                           # On rc -> ok shutdown dialog
-  ]
-  */
   boot_wait        = "3s"
   cdrom_interface  = "ide"
   communicator     = "none"
@@ -156,6 +115,7 @@ source "qemu" "reactos_base" {
   net_device       = "rtl8139"
   output_directory = "${local.output_directory}"
   shutdown_timeout = "20m"
+  qemu_binary      = "qemu-system-x86_64"
   qemuargs         = [
     ["-m", "${var.memory}M"],
     ["-smp", "${var.cpu}"],
@@ -165,7 +125,6 @@ source "qemu" "reactos_base" {
     # error occurs.
     ["-drive", "file=${local.output_directory}/packer-reactos_base,if=ide,index=1,cache=none,discard=ignore,format=qcow2"],
     ["-drive", "file=iso/reactos/${var.iso_file},if=ide,index=0,id=cdrom,media=cdrom"],
-    # ["-drive", "file=iso/reactos/virtio-win.iso,if=ide,index=2,id=virtio,media=cdrom"]
   ]
 }
 
