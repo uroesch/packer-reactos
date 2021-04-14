@@ -18,6 +18,7 @@ PACKER_LOG_PATH = ENV.fetch('PACKER_LOG_PATH', false)
 FAIL_FAST       = ENV.fetch('FAIL_FAST', 'false')
 LOG_DIR         = 'logs'
 ISO_DIR         = 'iso/reactos'
+IMAGE_DIR       = 'images'
 TEMPLATE_DIR    = 'templates'
 WINE_GECKO_URL  = 'https://svn.reactos.org/amine/wine_gecko-2.40-x86.msi'
 WINE_GECKO_SHA1 = '8a3adedf3707973d1ed4ac3b2e791486abf814bd'
@@ -219,6 +220,40 @@ end
 # -----------------------------------------------------------------------------
 directory LOG_DIR
 directory ISO_DIR
+directory IMAGE_DIR
+
+# -----------------------------------------------------------------------------
+# Namespaces
+# -----------------------------------------------------------------------------
+namespace :clean do
+  desc "Clean up everything (disk images, logs, old iso files)"
+  task :all => [:images, :logs, :isos]
+
+  desc "Clean all images"
+  task :images do
+    cd IMAGE_DIR do
+      rm Rake::FileList['*.qcow2', '*.tar.gz', '*.vhdx?', '*.vmdk']
+    end
+  end
+
+  desc "Clean packer logs"
+  task :logs do
+    cd LOG_DIR do
+      rm Rake::FileList['*.log']
+    end
+  end
+
+  desc "Clean outdated ISO images"
+  task :isos do
+    cd ISO_DIR do
+      %w( reactos-bootcd* *-RC-* ).each do |glob|
+        isos = Rake::FileList[glob].sort
+        isos.pop
+        rm isos unless isos.empty?
+      end
+    end
+  end
+end
 
 # -----------------------------------------------------------------------------
 # Tasks
@@ -239,22 +274,6 @@ task :help do
       PACKER_LOG_PATH=<path>
       PKR_VAR_<packer_variable>=<value>
   HELP
-end
-
-desc "Clean up everything (disk images, logs, old iso files)"
-task :clean_all => [:clean_logs, :clean_isos]
-
-desc "Clean logs"
-task :clean_logs do
-  rm_rf LOG_DIR
-end
-
-desc "Clean outdated ISO images"
-task :clean_isos do
-  isos = Rake::FileList["#{ISO_DIR}/reactos-bootcd*"]
-  isos.sort!
-  isos.pop
-  rm isos
 end
 
 desc "Download zipped ISO"
@@ -294,7 +313,7 @@ task :extract_iso do
 end
 
 desc "Build OS images"
-task :build => [ISO_DIR, LOG_DIR, :download_gecko] do
+task :build => [IMAGE_DIR, ISO_DIR, LOG_DIR, :download_gecko] do
   Rake::FileList['*.pkrvars.hcl'].each do |hcl|
     name = hcl.pathmap('%n').pathmap('%n')
     next unless hcl =~ BUILD
