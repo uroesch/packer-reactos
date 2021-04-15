@@ -37,6 +37,14 @@ TIP: With `rake` the environment variables `PACKER_LOG=1` and
      `PACKER_LOG_PATH=logs/reactos-<release>.log` will be set for better
      debugging.
 
+.Clean up
+[source,bash]
+----
+rake clean:all
+----
+
+Removes logs, os images and all but the most recent iso downloads.
+
 === Manual build
 
 * Download the zipped ISO images from the respective websites, unpack them to 
