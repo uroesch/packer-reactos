@@ -45,6 +45,24 @@ rake clean:all
 
 Removes logs, os images and all but the most recent iso downloads.
 
+.Clean logs
+[source,bash]
+----
+rake clean:logs
+----
+
+.Clean images
+[source,bash]
+----
+rake clean:images
+----
+
+.Clean ISO Files
+[source,bash]
+----
+rake clean:isos
+----
+
 === Manual build
 
 * Download the zipped ISO images from the respective websites, unpack them to 
