@@ -1,4 +1,9 @@
 # -----------------------------------------------------------------------------
+# Setup
+# -----------------------------------------------------------------------------
+$LOAD_PATH.unshift(File.expand_path('lib'))
+
+# -----------------------------------------------------------------------------
 # Libraries
 # -----------------------------------------------------------------------------
 require 'yaml'
@@ -7,6 +12,7 @@ require 'erb'
 require 'ostruct'
 require 'open-uri'
 require 'digest'
+require 'react_os'
 
 # -----------------------------------------------------------------------------
 # Globals
@@ -24,108 +30,9 @@ WINE_GECKO_URL  = 'https://svn.reactos.org/amine/wine_gecko-2.40-x86.msi'
 WINE_GECKO_SHA1 = '8a3adedf3707973d1ed4ac3b2e791486abf814bd'
 VIRTIO_ISO_URL  = 'https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso'
 
-
-# -----------------------------------------------------------------------------
-# Modules
-# -----------------------------------------------------------------------------
-module ReactOS
-  class ISO
-    require 'find'
-    require 'shellwords'
-
-    # modify the ISO file for unattended installation via file injection.
-    def self.modify(iso)
-      @iso_path = Find.find('.').find { |f| f.end_with?(iso) }
-      # preparation for injecting wine_gecko
-      # extract_file('/reactos/reactos.cab', 'reactos.cab')
-      inject_file('unattend.inf', '/reactos/unattend.inf')
-    end
-
-    # extract a particular file from the ISO
-    def self.extract_file(iso_file, local_file)
-      cmd = %(xorriso )
-        %(-osirrox on )
-        %(-indev "#{@iso_path}" )
-        %(-extract "#{iso_file}" "#{local_file}")
-      run(cmd)
-    end
-
-    # inject a modified file into the ISO / may overwrite existing file.
-    def self.inject_file(local_file, iso_file)
-      cmd = %(xorriso ) +
-        %(-overwrite on ) +
-        %(-dev "#{@iso_path}" ) +
-        %(-boot_image any replay ) +
-        %(-map_single "#{local_file}" "#{iso_file}")
-      run(cmd)
-    end
-
-    private
-
-    def self.run(cmd)
-      cmd = Shellwords.split(cmd) if cmd.class === String
-      exit unless system(*cmd)
-    end
-  end
-
-  # ---------------------------------------------------------------------------
-  class URL
-    require 'yaml'
-
-    CONFIG_YAML = 'config.yaml'
-
-    # determine the latest nightly release URL
-    def self.nightly_url(target = 'x86')
-      fetch_url('nightly').each do |line|
-        next unless line =~ %r{reactos-bootcd-.*\.7z}
-        next unless line =~ %r{-#{target}-}
-        return config['nightly']['url'] +
-          line.gsub(%r{.*href=["'](.*?)["'].*}xs, '\1').strip
-      end
-    end
-
-    # determine the latest RC release URL
-    def self.rc_url
-      fetch_url('rc').each do |line|
-        next unless line =~ %r{href=.*-RC-.*-iso\.zip}
-        return line.gsub(%r{.*href=["'](.*?)["'].*}xs, '\1').strip
-      end
-    end
-
-    # return the basename and iso file name of a url
-    # file taking into account the whacky sourceforge.net url.
-    def self.basename(url)
-      # remove the '/download' from the sf url
-      basename = File.basename(url.sub(%r{/download$}, ''))
-      # determine the name after extraction from zip
-      iso_name = basename.ext.sub(%r{-iso$}, '') + '.iso'
-      return basename, iso_name
-    end
-
-    private
-    def self.config
-      return @config if @config
-      begin
-        @config = YAML.load_file(CONFIG_YAML)
-      rescue => e
-        $stderr.puts e.message
-        exit 1
-      end
-    end
-
-    def self.fetch_url(name)
-      data   = config[name]
-      result = URI.open(data['url'])
-      lines  = result.readlines
-      data.fetch('top_down', true) ? lines : lines.reverse
-    end
-  end
-end
-
 # -----------------------------------------------------------------------------
 # Methods
 # -----------------------------------------------------------------------------
-
 # manage environment variables passed to packer
 def environment(dist_name)
   ENV['PACKER_LOG']      = PACKER_LOG.to_s
