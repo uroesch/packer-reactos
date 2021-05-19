@@ -17,7 +17,15 @@ module ReactOS
     # determine the latest RC release URL
     def self.rc_url
       fetch_url('rc').each do |line|
-        next unless line =~ %r{href=.*-RC-.*-iso\.zip}
+        next unless line =~ %r{href=.*-RC-.*-iso\.zip/download}
+        return line.gsub(%r{.*href=["'](.*?)["'].*}xs, '\1').strip
+      end
+    end
+
+    # determine the latest RC release URL
+    def self.release_url
+      fetch_url('release').each do |line|
+        next unless line =~ %r{href=.*-release-\d+-.*-iso\.zip/download}
         return line.gsub(%r{.*href=["'](.*?)["'].*}xs, '\1').strip
       end
     end

@@ -185,14 +185,15 @@ end
 
 desc "Download zipped ISO"
 task :download_iso, [:build] do |task, build|
-  case build
-  when %r{rc$}
-    url = ReactOS::URL.rc_url
-    download_file(url, ISO_DIR)
-  when %r{nightly$}
-    url = ReactOS::URL.nightly_url(TARGET)
-    download_file(url, ISO_DIR)
-  end
+  url = case build
+        when %r{release$}
+          url = ReactOS::URL.release_url
+        when %r{rc$}
+          url = ReactOS::URL.rc_url
+        when %r{nightly$}
+          url = ReactOS::URL.nightly_url(TARGET)
+        end
+  download_file(url, ISO_DIR)
   Rake::Task[:extract_iso].execute
 end
 
