@@ -27,22 +27,19 @@ jobs:
         - ubuntu-latest
 
     steps:
-    - name: Install qemu and xorriso
-      shell: bash
-      run: >
-        sudo apt-get -y update &&
-        sudo apt-get -y install qemu-system-x86 qemu-utils xorriso
-
-    - name: Packer version
-      shell: bash
-      run: packer -version
-
     - name: Checkout repository
       uses: actions/checkout@v2
+
+    - name: Download docker-packer script
+      shell: bash
+      run: |
+        curl -JLO https://raw.githubusercontent.com/uroesch/docker-packer/main/docker-packer
+        chmod 755 docker-packer
 
     - name: Build nightly
       shell: bash
       run: >
+        ./docker-packer
         rake
         BUILD=reactos-nightly
         TARGET=x86
@@ -53,6 +50,7 @@ jobs:
     - name: Build RC
       shell: bash
       run: >
+        ./docker-packer
         rake
         BUILD=reactos-rc
         TARGET=x86
@@ -65,4 +63,4 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: debug.zip
-        path: build.log 
+        path: build.log
