@@ -114,7 +114,7 @@ source "qemu" "reactos_base" {
   memory           = "${var.memory}"
   net_device       = "rtl8139"
   output_directory = "${local.output_directory}"
-  shutdown_timeout = "20m"
+  shutdown_timeout = "60m"
   qemu_binary      = "qemu-system-x86_64"
   qemuargs         = [
     ["-m", "${var.memory}M"],
