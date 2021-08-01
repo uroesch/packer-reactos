@@ -90,9 +90,9 @@ packer build -var-file="reactos-nightly.pkrvars.hcl" -only="*.reactos-nightly" r
   the latest commit some bumps in the road are to be expected.
 
 == Todo
-* [ ] Automatic download of ISO files.
+* [x] Automatic download of ISO files.
 ** [x] Download of nightly builds.
 ** [x] Download of RC releases.
-** [ ] Download of Releases.
+** [x] Download of Releases.
 * [x] Run with unattend.inf
 * [ ] Install `virtio` drivers
