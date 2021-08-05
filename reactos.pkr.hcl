@@ -189,7 +189,7 @@ build {
       "DEBUG=true",
       "DEST_DIR=${local.output_base}",
       "DIST_NAME=${var.name}",
-      "TARGET=${local.dist_name}-${var.target}"
+      "TARGET=${var.version}-${var.target}"
     ]
   }
   /*
