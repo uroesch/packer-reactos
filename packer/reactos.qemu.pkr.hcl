@@ -45,7 +45,7 @@ source "qemu" "reactos_base" {
 # -----------------------------------------------------------------------------
 build {
   # ---------------------------------------------------------------------------
-  # QEMU 
+  # QEMU
   # ---------------------------------------------------------------------------
   source "qemu.reactos_base" {
     name = "reactos-rc"
@@ -63,13 +63,13 @@ build {
 
   post-processor "shell-local" {
     only   = [
-      "qemu.reactos-rc", 
+      "qemu.reactos-rc",
       "qemu.reactos-nightly",
       "qemu.reactos-release"
     ]
     inline = [
-      "mv ${local.output_directory}/qemu/${local.dist_name}* images/${local.dist_name}-${var.target}.qcow2", 
-      "rm -rf ${local.output_directory}/qemu" 
+      "mv ${local.output_directory}/qemu/${local.dist_name}* images/${local.dist_name}-${var.target}.qcow2",
+      "rm -rf ${local.output_directory}/qemu"
     ]
   }
 

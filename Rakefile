@@ -31,7 +31,6 @@ TEMPLATE_DIR    = 'templates'
 WINE_GECKO_URL  = 'https://svn.reactos.org/amine/wine_gecko-2.40-x86.msi'
 WINE_GECKO_SHA1 = '8a3adedf3707973d1ed4ac3b2e791486abf814bd'
 VIRTIO_ISO_URL  = 'https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso'
-
 # -----------------------------------------------------------------------------
 # Methods
 # -----------------------------------------------------------------------------
@@ -69,6 +68,25 @@ def parse_var_file(file)
   hcl_vars
 end
 
+def packer_auto_var_files
+  file_glob = File.join(PACKER_HCL_DIR, '*.auto.pkrvars.hcl')
+  Rake::FileList[file_glob]
+end
+
+def packer_release_var_files
+  file_glob       = File.join(PACKER_HCL_DIR, '*.pkrvars.hcl')
+  exclude_pattern = %r{\.auto\.pkrvars\.hcl}
+  Rake::FileList[file_glob].exclude(exclude_pattern)
+end
+
+def parse_var_files(var_file)
+  config = {}
+  packer_auto_var_files.each do |auto_var_file|
+    config.merge!(parse_var_file(auto_var_file))
+  end
+  p config.merge!(parse_var_file(var_file))
+end
+
 # Read environment variables starting with PKR_VAR_ and
 # convert to command line switch
 def pkr_vars
@@ -80,7 +98,7 @@ end
 
 # write config file based on template
 def write_config(var_file)
-  @config = parse_var_file(var_file)
+  @config = parse_var_files(var_file)
   glob = File.join(TEMPLATE_DIR, '*.erb')
   Rake::FileList[glob].each do |template|
     basename = File.basename(template.ext)
@@ -224,7 +242,7 @@ end
 
 desc "Build OS images"
 task :build => [IMAGE_DIR, ISO_DIR, LOG_DIR, :download_gecko] do
-  Rake::FileList[PACKER_HCL_DIR + '/*.pkrvars.hcl'].each do |hcl|
+  packer_release_var_files.each do |hcl|
     name = hcl.pathmap('%n').pathmap('%n')
     next unless hcl =~ BUILD
     write_config(hcl)
