@@ -17,11 +17,13 @@ require 'react_os'
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
+PACKER_HCL_DIR  = 'packer'
 BUILD           = Regexp.new(ENV.fetch('BUILD', '.*'))
 TARGET          = ENV.fetch('TARGET', 'x86')
 PACKER_LOG      = ENV.fetch('PACKER_LOG', 1)
 PACKER_LOG_PATH = ENV.fetch('PACKER_LOG_PATH', false)
 FAIL_FAST       = ENV.fetch('FAIL_FAST', 'false')
+PARALLEL_BUILDS = ENV.fetch('PARALLEL_BUILDS', 1)
 LOG_DIR         = 'logs'
 ISO_DIR         = 'iso/reactos'
 IMAGE_DIR       = 'images'
@@ -222,7 +224,7 @@ end
 
 desc "Build OS images"
 task :build => [IMAGE_DIR, ISO_DIR, LOG_DIR, :download_gecko] do
-  Rake::FileList['*.pkrvars.hcl'].each do |hcl|
+  Rake::FileList[PACKER_HCL_DIR + '/*.pkrvars.hcl'].each do |hcl|
     name = hcl.pathmap('%n').pathmap('%n')
     next unless hcl =~ BUILD
     write_config(hcl)
@@ -232,14 +234,14 @@ task :build => [IMAGE_DIR, ISO_DIR, LOG_DIR, :download_gecko] do
     iso_file  = iso_path(file_glob)
     ReactOS::ISO.modify(iso_file)
     sh %(packer build ) +
-       %(-parallel-builds=1 ) +
+       %(-parallel-builds=#{PARALLEL_BUILDS} ) +
        %(-var-file="#{hcl}" ) +
        %(-var="target=#{TARGET}" ) +
        %(-var="iso_file=#{iso_file}" ) +
        %(-var="iso_checksum=#{sha256sum(iso_file)}" ) +
        %(#{pkr_vars} ) +
        %(-only="*.#{name}" ) +
-       %(reactos.pkr.hcl) do |ok, res|
+       %(#{PACKER_HCL_DIR}) do |ok, res|
          exit res.exitstatus if FAIL_FAST == 'true' && ! ok
        end
   end
