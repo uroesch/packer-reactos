@@ -29,7 +29,7 @@ source "virtualbox-iso" "reactos_base" {
 # -----------------------------------------------------------------------------
 build {
   # ---------------------------------------------------------------------------
-  # VirtualBox 
+  # VirtualBox
   # ---------------------------------------------------------------------------
   source "virtualbox-iso.reactos_base" {
     name = "reactos-nightly"
@@ -45,13 +45,13 @@ build {
 
   post-processor "shell-local" {
     only   = [
-      "virtualbox-iso.reactos-rc", 
+      "virtualbox-iso.reactos-rc",
       "virtualbox-iso.reactos-nightly",
       "virtualbox-iso.reactos-release"
     ]
     inline = [
-      "mv ${local.output_directory}/vbox/${local.dist_name}*ova images/", 
-      "rm -rf ${local.output_directory}/vbox" 
+      "mv ${local.output_directory}/vbox/${local.dist_name}*ova images/",
+      "rm -rf ${local.output_directory}/vbox"
     ]
   }
 }
