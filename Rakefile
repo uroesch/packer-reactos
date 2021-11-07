@@ -84,7 +84,7 @@ def parse_var_files(var_file)
   packer_auto_var_files.each do |auto_var_file|
     config.merge!(parse_var_file(auto_var_file))
   end
-  p config.merge!(parse_var_file(var_file))
+  config.merge!(parse_var_file(var_file))
 end
 
 # Read environment variables starting with PKR_VAR_ and
