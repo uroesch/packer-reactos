@@ -18,7 +18,7 @@ require 'react_os'
 # Globals
 # -----------------------------------------------------------------------------
 PACKER_HCL_DIR  = 'packer'
-BUILD           = Regexp.new(ENV.fetch('BUILD', '.*'))
+BUILD           = ENV.fetch('BUILD', '.*')
 TARGET          = ENV.fetch('TARGET', 'x86')
 PACKER_LOG      = ENV.fetch('PACKER_LOG', 1)
 PACKER_LOG_PATH = ENV.fetch('PACKER_LOG_PATH', false)
@@ -120,15 +120,6 @@ def download_file(url, target_dir = '.')
   end
 end
 
-# create an glob for the various ISO file naming conventions
-def iso_glob(hcl, target = 'x86')
-  case hcl
-  when %r{nightly} then "*-dev-*#{target}*"
-  when %r{rc} then '*-RC-*'
-  else '*-release-*'
-  end
-end
-
 # return the latest version of the ISO file in iso directory
 def iso_path(file_glob = '*.iso')
   cd ISO_DIR do
@@ -137,8 +128,7 @@ def iso_path(file_glob = '*.iso')
 end
 
 # create a sha256 sum from the target ISO file
-def sha256sum(basename)
-  path = File.join(ISO_DIR, basename)
+def sha256sum(path)
   'sha256:' << Digest::SHA256.file(path).hexdigest
 end
 
@@ -207,11 +197,11 @@ desc "Download zipped ISO"
 task :download_iso, [:build] do |task, build|
   url = case build
         when %r{release$}
-          url = ReactOS::URL.release_url
+          ReactOS::URL.release_url
         when %r{rc$}
-          url = ReactOS::URL.rc_url
+          ReactOS::URL.rc_url
         when %r{nightly$}
-          url = ReactOS::URL.nightly_url(TARGET)
+          ReactOS::URL.nightly_url(TARGET)
         end
   download_file(url, ISO_DIR)
   Rake::Task[:extract_iso].execute
@@ -244,12 +234,13 @@ desc "Build OS images"
 task :build => [IMAGE_DIR, ISO_DIR, LOG_DIR, :download_gecko] do
   packer_release_var_files.each do |hcl|
     name = hcl.pathmap('%n').pathmap('%n')
-    next unless hcl =~ BUILD
+    next unless name =~ Regexp.new(BUILD)
+    build = name.split('-').last
     write_config(hcl)
     environment(name)
     Rake::Task[:download_iso].execute(name)
-    file_glob = iso_glob(hcl, TARGET)
-    iso_file  = iso_path(file_glob)
+    p release  = ReactOS::Config.new(build: build, target: TARGET)
+    p iso_file = ReactOS::ISO.path(release.iso_patterns)
     ReactOS::ISO.modify(iso_file)
     sh %(packer build ) +
        %(-parallel-builds=#{PARALLEL_BUILDS} ) +
