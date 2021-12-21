@@ -65,14 +65,14 @@ rake clean:isos
 
 === Manual build
 
-* Download the zipped ISO images from the respective websites, unpack them to 
-  the `iso/reactos` directory. 
+* Download the zipped ISO images from the respective websites, unpack them to
+  the `iso/reactos` directory.
 
-* Further checksum them with `sha256sum` and modify the values in the 
+* Further checksum them with `sha256sum` and modify the values in the
   `reactos-<release>.pkrvars.hcl` files.
 
-* Inject a modified the `unattend.inf` file into the iso as outlined 
-  https://gist.github.com/uroesch/49d729fb5c86ed54974c0bca50873761[here]. 
+* Inject a modified the `unattend.inf` file into the iso as outlined
+  https://gist.github.com/uroesch/49d729fb5c86ed54974c0bca50873761[here].
 
 .Simple build manually
 [source,bash]
@@ -83,17 +83,10 @@ packer build -var-file="reactos-nightly.pkrvars.hcl" -only="*.reactos-nightly" r
 
 == Known issues
 
-* The following builds are not yet working as they produce kernel panics.
-  ** 0.4.13 (release)
 * The nightly nightly x64 (0.4.15) are building a working image but the finished
   machine is still quite buggy.
 * Occasionally the nightly builds won't work as expected. As it is always on
   the latest commit some bumps in the road are to be expected.
 
 == Todo
-* [x] Automatic download of ISO files.
-** [x] Download of nightly builds.
-** [x] Download of RC releases.
-** [x] Download of Releases.
-* [x] Run with unattend.inf
 * [ ] Install `virtio` drivers

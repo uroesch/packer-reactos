@@ -3,9 +3,15 @@ module ReactOS
     require 'find'
     require 'shellwords'
 
+    # find and return the iso file based on pattern
+    def self.path(pattern)
+      p pattern
+      @iso_path = Find.find('.').find { |f| File.file?(f) && f =~ pattern }
+    end
+
     # modify the ISO file for unattended installation via file injection.
-    def self.modify(iso)
-      @iso_path = Find.find('.').find { |f| f.end_with?(iso) }
+    def self.modify(iso_path)
+      @iso_path = iso_path
       # preparation for injecting wine_gecko
       # extract_file('/reactos/reactos.cab', 'reactos.cab')
       inject_file('unattend.inf', '/reactos/unattend.inf')
