@@ -50,7 +50,7 @@ variable "iso_checksum" {
 }
 variable "iso_file" {
   type        = string
-  description = "Base name of ISO file used for installation."
+  description = "Path to the ISO file used for installation."
 }
 variable "ros_fstype" {
   type        = string
