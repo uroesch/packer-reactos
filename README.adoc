@@ -4,7 +4,8 @@ This is a an early version of my attempt to build KVM images from ReactOS ISOs.
 
 == Prerequisites
 * https://www.packer.io/[Packer] >= 1.7.0
-* https://www.qemu.org/[Qemu] (Tested with version 5.0.0 but older version should work as well)
+* https://www.qemu.org/[Qemu] 
+  (Tested with version 5.0.0 but older version should work as well)
 * https://www.gnu.org/software/xorriso/[xorriso]
 * 7z
 * https://www.ruby-lang.org/[Ruby]
@@ -77,12 +78,16 @@ rake clean:isos
 .Simple build manually
 [source,bash]
 ----
-packer build -var-file="reactos-rc.pkrvars.hcl" -only="*.reactos-rc" reactos.pkr.hcl
-packer build -var-file="reactos-nightly.pkrvars.hcl" -only="*.reactos-nightly" reactos.pkr.hcl
+packer build -var-file="reactos-rc.pkrvars.hcl" \
+  -only="*.reactos-rc" reactos.pkr.hcl
+packer build -var-file="reactos-nightly.pkrvars.hcl" \
+  -only="*.reactos-nightly" reactos.pkr.hcl
 ----
 
 == Known issues
 
+* Release candidate builds are currently using 0.4.14-RC releases the 0.4.15 
+  RC are not yet online.
 * The nightly nightly x64 (0.4.15) are building a working image but the finished
   machine is still quite buggy.
 * Occasionally the nightly builds won't work as expected. As it is always on
@@ -90,3 +95,5 @@ packer build -var-file="reactos-nightly.pkrvars.hcl" -only="*.reactos-nightly" r
 
 == Todo
 * [ ] Install `virtio` drivers
+
+// vim: set colorcolumn=80 textwidth=80 spell spelllang=en_us :
