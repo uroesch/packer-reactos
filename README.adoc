@@ -88,7 +88,7 @@ packer build -var-file="reactos-nightly.pkrvars.hcl" \
 
 * Release candidate builds are currently using 0.4.14-RC releases the 0.4.15 
   RC are not yet online.
-* The nightly nightly x64 (0.4.15) are building a working image but the finished
+* The nightly x64 (0.4.15) are building a working image but the finished
   machine is still quite buggy.
 * Occasionally the nightly builds won't work as expected. As it is always on
   the latest commit some bumps in the road are to be expected.
