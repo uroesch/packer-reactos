@@ -9,6 +9,15 @@ variable "version" {
   type        = string
   description = "Version to build e.g. 0.4.15."
 }
+variable "arch" {
+  type        = string
+  default     = "x86"
+  description = "Architecture to build either x86 or x64."
+  validation {
+    condition     = can(regex("^x(86|64)", var.arch))
+    error_message = "Arch must be either, 'x86' [default] or 'x64'."
+  }
+}
 variable "target" {
   type        = string
   default     = "workstation"
@@ -83,6 +92,6 @@ variable "ros_adminpassword" {
 locals {
   dist_name        = "${var.name}-${var.version}"
   output_base      = "${var.destination_dir}"
-  output_directory = "${local.output_base}/${local.dist_name}-${var.target}"
+  output_directory = "${local.output_base}/${local.dist_name}-${var.arch}"
   config_file      = "${local.dist_name}/"
 }

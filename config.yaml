@@ -14,4 +14,4 @@ nightly:
   top_down: false
   url: https://iso.reactos.org/bootcd/
   iso_patterns:
-    - '.*-dev-.*-%{target}.*\.iso'
+    - '.*-dev-.*-%{arch}.*\.iso'

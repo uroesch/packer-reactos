@@ -19,7 +19,9 @@ require 'react_os'
 # -----------------------------------------------------------------------------
 PACKER_HCL_DIR  = 'packer'
 BUILD           = ENV.fetch('BUILD', '.*')
-TARGET          = ENV.fetch('TARGET', 'x86')
+ARCH            = ENV.fetch('ARCH', 'x86')
+BUILDER         = ENV.fetch('BUILDER', '*')
+HEADLESS        = ENV.fetch('HEADLESS', 'true')
 PACKER_LOG      = ENV.fetch('PACKER_LOG', 1)
 PACKER_LOG_PATH = ENV.fetch('PACKER_LOG_PATH', false)
 FAIL_FAST       = ENV.fetch('FAIL_FAST', 'false')
@@ -187,8 +189,10 @@ task :help do
 
     Variables:
       BUILD=<pattern>
-      TARGET=x86|x64
+      BUILDER=qemu|virtualbox
+      ARCH=x86|x64
       PACKER_LOG_PATH=<path>
+      HEADLESS=true|false
       PKR_VAR_<packer_variable>=<value>
   HELP
 end
@@ -201,7 +205,7 @@ task :download_iso, [:build] do |task, build|
         when %r{rc$}
           ReactOS::URL.rc_url
         when %r{nightly$}
-          ReactOS::URL.nightly_url(TARGET)
+          ReactOS::URL.nightly_url(ARCH)
         end
   download_file(url, ISO_DIR)
   Rake::Task[:extract_iso].execute
@@ -239,17 +243,18 @@ task :build => [IMAGE_DIR, ISO_DIR, LOG_DIR, :download_gecko] do
     write_config(hcl)
     environment(name)
     Rake::Task[:download_iso].execute(name)
-    p release  = ReactOS::Config.new(build: build, target: TARGET)
+    p release  = ReactOS::Config.new(build: build, arch: ARCH)
     p iso_file = ReactOS::ISO.path(release.iso_patterns)
     ReactOS::ISO.modify(iso_file)
     sh %(packer build ) +
        %(-parallel-builds=#{PARALLEL_BUILDS} ) +
        %(-var-file="#{hcl}" ) +
-       %(-var="target=#{TARGET}" ) +
+       %(-var="arch=#{ARCH}" ) +
        %(-var="iso_file=#{iso_file}" ) +
        %(-var="iso_checksum=#{sha256sum(iso_file)}" ) +
+       %(-var="headless=#{HEADLESS}" ) +
        %(#{pkr_vars} ) +
-       %(-only="*.#{name}" ) +
+       %(-only="#{BUILDER}.#{name}" ) +
        %(#{PACKER_HCL_DIR}) do |ok, res|
          exit res.exitstatus if FAIL_FAST == 'true' && ! ok
        end

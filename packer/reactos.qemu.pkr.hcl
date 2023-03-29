@@ -2,7 +2,7 @@
 # Sources
 # -----------------------------------------------------------------------------
 source "qemu" "reactos_base" {
-  vm_name          = "${local.dist_name}-${var.target}"
+  vm_name          = "${local.dist_name}-${var.arch}"
   accelerator      = "none"
   boot_wait        = "3s"
   cdrom_interface  = "ide"
@@ -35,7 +35,7 @@ source "qemu" "reactos_base" {
     # both cd and disk does not work because the index for the disk is not
     # specified. The disk is declare before the cd with index=0 and an
     # error occurs.
-    ["-drive", "file=${local.output_directory}/qemu/${local.dist_name}-${var.target},if=ide,index=1,cache=none,discard=ignore,format=qcow2"],
+    ["-drive", "file=${local.output_directory}/qemu/${local.dist_name}-${var.arch},if=ide,index=1,cache=none,discard=ignore,format=qcow2"],
     ["-drive", "file=${var.iso_file},if=ide,index=0,id=cdrom,media=cdrom"],
   ]
 }
@@ -66,7 +66,7 @@ build {
       "qemu.reactos-release"
     ]
     inline = [
-      "mv ${local.output_directory}/qemu/${local.dist_name}* images/${local.dist_name}-${var.target}.qcow2",
+      "mv ${local.output_directory}/qemu/${local.dist_name}* images/${local.dist_name}-${var.arch}.qcow2",
       "rm -rf ${local.output_directory}/qemu"
     ]
   }
@@ -78,9 +78,9 @@ build {
       "FORMAT=gcp",
       "DEBUG=true",
       "DEST_DIR=${local.output_base}",
-      "IMAGE_PATH=${local.output_base}/${local.dist_name}-${var.target}.qcow2",
+      "IMAGE_PATH=${local.output_base}/${local.dist_name}-${var.arch}.qcow2",
       "DIST_NAME=${local.dist_name}",
-      "TARGET=${var.target}"
+      "TARGET=${var.arch}"
     ]
   }
   */

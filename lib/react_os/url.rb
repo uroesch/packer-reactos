@@ -5,10 +5,10 @@ module ReactOS
     CONFIG_YAML = 'config.yaml'
 
     # determine the latest nightly release URL
-    def self.nightly_url(target = 'x86')
+    def self.nightly_url(arch  = 'x86')
       fetch_url('nightly').each do |line|
         next unless line =~ %r{reactos-bootcd-.*\.7z}
-        next unless line =~ %r{-#{target}-}
+        next unless line =~ %r{-#{arch }-}
         return config['nightly']['url'] +
           line.gsub(%r{.*href=["'](.*?)["'].*}xs, '\1').strip
       end
