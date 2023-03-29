@@ -8,7 +8,7 @@ module ReactOS
 
     def initialize(**kwargs)
       @build     = kwargs.fetch(:build, 'nightly')
-      @target    = kwargs.fetch(:target, 'x86')
+      @arch      = kwargs.fetch(:arch, 'x86')
       @yaml_file = kwargs.fetch(:yaml_file, CONFIG_YAML)
       begin
         super(config)
@@ -28,7 +28,7 @@ module ReactOS
       p @build
       @config = @yaml.fetch(@build, {})
       @config.store(:build, @build)
-      @config.store(:target, @target)
+      @config.store(:arch, @arch)
       @config = Hash[@config.map { |k,v| [k.to_sym, v] }]
       process_iso_patterns
       @config

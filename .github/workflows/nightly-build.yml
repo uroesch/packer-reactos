@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # Run nightly build verification
 # Author: Urs Roesch https://github.com/uroesch
-# Version: 0.2.0
+# Version: 0.3.0
 # -----------------------------------------------------------------------------
 name: nightly-build
 
@@ -17,50 +17,40 @@ on:
   workflow_dispatch:
 
 jobs:
-  nightly-build:
+  build:
     timeout-minutes: 90
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
+    container:
+      image: uroesch/packer:latest
     strategy:
       fail-fast: true
       matrix:
-        os:
-        - ubuntu-latest
+        build:
+          - reactos-nightly
+        builder:
+          - qemu
+        arch:
+          - x86
+          - x64
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
-
-    - name: Download docker-packer script
-      shell: bash
-      run: |
-        curl -JLO https://raw.githubusercontent.com/uroesch/docker-packer/main/docker-packer
-        chmod 755 docker-packer
+      uses: actions/checkout@v3
 
     - name: Build nightly
       shell: bash
       run: >
-        ./docker-packer
         rake
-        BUILD=reactos-nightly
-        TARGET=x86
+        BUILD=${{ matrix.build }}
+        BUILDER=${{ matrix.builder }}
+        ARCH=${{ matrix.arch }}
+        HEADLESS=true
         FAIL_FAST=true
         PACKER_LOG_PATH=build.log
-        PKR_VAR_headless=true
-
-    - name: Build RC
-      shell: bash
-      run: >
-        ./docker-packer
-        rake
-        BUILD=reactos-rc
-        TARGET=x86
-        FAIL_FAST=true
-        PACKER_LOG_PATH=build.log
-        PKR_VAR_headless=true
 
     - name: Upload artifacts on failure
       if: failure()
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: debug.zip
         path: build.log
