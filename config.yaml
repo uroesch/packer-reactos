@@ -12,6 +12,6 @@ rc:
     - '.*-RC-.*\.iso'
 nightly:
   top_down: false
-  url: https://iso.reactos.org/bootcd/
+  url: https://iso.reactos.org/bootcd/?C=M;O=A
   iso_patterns:
     - '.*-dev-.*-%{arch}.*\.iso'
