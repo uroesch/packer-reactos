@@ -36,6 +36,10 @@ VIRTIO_ISO_URL  = 'https://fedorapeople.org/groups/virt/virtio-win/direct-downlo
 # -----------------------------------------------------------------------------
 # Methods
 # -----------------------------------------------------------------------------
+def packer_version
+  ('%d%03d%03d' % `packer version`.gsub(%r{[^\d\.]+}, '').split('.')).to_i
+end
+
 # manage environment variables passed to packer
 def environment(dist_name)
   ENV['PACKER_LOG']      = PACKER_LOG.to_s
@@ -234,8 +238,17 @@ task :extract_iso do
   end
 end
 
+desc "Initialize packer"
+task :packer_init do
+  if packer_version >= 1009000 
+    sh %(packer init #{PACKER_HCL_DIR}) do |ok, res|
+      exit res.exitstatus if FAIL_FAST == 'true' && ! ok
+    end
+  end
+end
+
 desc "Build OS images"
-task :build => [IMAGE_DIR, ISO_DIR, LOG_DIR, :download_gecko] do
+task :build => [IMAGE_DIR, ISO_DIR, LOG_DIR, :packer_init] do
   packer_release_var_files.each do |hcl|
     name = hcl.pathmap('%n').pathmap('%n')
     next unless name =~ Regexp.new(BUILD)
@@ -243,8 +256,8 @@ task :build => [IMAGE_DIR, ISO_DIR, LOG_DIR, :download_gecko] do
     write_config(hcl)
     environment(name)
     Rake::Task[:download_iso].execute(name)
-    p release  = ReactOS::Config.new(build: build, arch: ARCH)
-    p iso_file = ReactOS::ISO.path(release.iso_patterns)
+    release  = ReactOS::Config.new(build: build, arch: ARCH)
+    iso_file = ReactOS::ISO.path(release.iso_patterns)
     ReactOS::ISO.modify(iso_file)
     sh %(packer build ) +
        %(-parallel-builds=#{PARALLEL_BUILDS} ) +
