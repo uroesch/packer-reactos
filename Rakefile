@@ -2,6 +2,7 @@
 # Setup
 # -----------------------------------------------------------------------------
 $LOAD_PATH.unshift(File.expand_path('lib'))
+Rake::FileList['lib/tasks/*.rake'].each { |f| load f }
 
 # -----------------------------------------------------------------------------
 # Libraries
@@ -33,6 +34,7 @@ TEMPLATE_DIR    = 'templates'
 WINE_GECKO_URL  = 'https://svn.reactos.org/amine/wine_gecko-2.40-x86.msi'
 WINE_GECKO_SHA1 = '8a3adedf3707973d1ed4ac3b2e791486abf814bd'
 VIRTIO_ISO_URL  = 'https://fedorapeople.org/groups/virt/virtio-win/direct-downloads/stable-virtio/virtio-win.iso'
+
 # -----------------------------------------------------------------------------
 # Methods
 # -----------------------------------------------------------------------------
@@ -144,39 +146,6 @@ end
 directory LOG_DIR
 directory ISO_DIR
 directory IMAGE_DIR
-
-# -----------------------------------------------------------------------------
-# Namespaces
-# -----------------------------------------------------------------------------
-namespace :clean do
-  desc "Clean up everything (disk images, logs, old iso files)"
-  task :all => [:images, :logs, :isos]
-
-  desc "Clean all images"
-  task :images do
-    cd IMAGE_DIR do
-      rm Rake::FileList['*.qcow2', '*.tar.gz', '*.vhdx?', '*.vmdk']
-    end
-  end
-
-  desc "Clean packer logs"
-  task :logs do
-    cd LOG_DIR do
-      rm Rake::FileList['*.log']
-    end
-  end
-
-  desc "Clean outdated ISO images"
-  task :isos do
-    cd ISO_DIR do
-      %w( reactos-bootcd* *-RC-* ).each do |glob|
-        isos = Rake::FileList[glob].sort
-        isos.pop
-        rm isos unless isos.empty?
-      end
-    end
-  end
-end
 
 # -----------------------------------------------------------------------------
 # Tasks

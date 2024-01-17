@@ -4,6 +4,10 @@ class Xorriso
 
   @inject_files  = []
 
+  def self.inject_files 
+    @inject_files 
+  end
+
   # find and return the iso file based on pattern
   def self.path(pattern)
     found = Find.find('.').find.inject([]) do |found, path|
