@@ -6,3 +6,4 @@ packer_cache
 artifacts
 http
 images
+**/.*.swp

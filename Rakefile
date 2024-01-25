@@ -170,33 +170,6 @@ task :help do
   HELP
 end
 
-desc "Download zipped ISO"
-task :download_iso, [:build] do |task, build|
-  url = case build
-        when %r{release$}
-          ReactOS::URL.release_url
-        when %r{rc$}
-          ReactOS::URL.rc_url
-        when %r{nightly$}
-          ReactOS::URL.nightly_url(ARCH)
-        end
-  download_file(url, ISO_DIR)
-  Rake::Task[:extract_iso].execute
-end
-
-desc "Download virtio ISO"
-task :download_virtio_iso do
-  # disabled for now
-  # download_file(VIRTIO_ISO_URL, ISO_DIR)
-end
-
-desc "Download gecko engine"
-task :download_gecko => :download_virtio_iso do
-  # disabled for the time being
-  # still working out some issues
-  # download_file(WINE_GECKO_URL)
-end
-
 desc "extract iso from archive"
 task :extract_iso do
   cd ISO_DIR do
@@ -224,7 +197,7 @@ task :build => [IMAGE_DIR, ISO_DIR, LOG_DIR, :packer_init] do
     build = name.split('-').last
     write_config(hcl)
     environment(name)
-    Rake::Task[:download_iso].execute(name)
+    Rake::Task['download:iso'].execute(name)
     release  = ReactOS::Config.new(build: build, arch: ARCH)
     iso_file = ReactOS::ISO.path(release.iso_patterns)
     ReactOS::ISO.modify(iso_file)
